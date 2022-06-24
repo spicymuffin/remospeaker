@@ -1,0 +1,92 @@
+#:kivy 2.1.0
+
+#:set padding_base 8
+#:set sm_button_width 36
+
+<HistoryInput@BoxLayout>
+    height: input_label.height
+    orientation: 'horizontal'
+    size_hint: 1, None
+    line_num: "0"
+    input_text: "???"
+    Button:
+        halign: 'right'
+        on_press: root.collapse_row(app, input_label)
+        size_hint: None, 1
+        text: root.line_num
+        text_size: self.width - sp(padding_base), None
+        width: sp(sm_button_width)
+    Label:
+        id: input_label
+        height: self.texture_size[1] + sp(padding_base)
+        size_hint: 1, None
+        text: root.input_text
+        text_size: self.width, None
+    Button:
+        text: 'R'
+        size_hint: None, 0.5
+        width: sp(sm_button_width)
+
+<HistoryOutput@BoxLayout>
+    height: output_label.height
+    orientation: 'horizontal'
+    size_hint: 1, None
+    line_num: "0"
+    output_text: "???"
+    Button:
+        halign: 'right'
+        on_press: root.collapse_row(app, output_label)
+        size_hint: None, 1
+        text: root.line_num
+        text_size: self.width - sp(padding_base), None
+        width: sp(sm_button_width)
+    Label:
+        height: self.texture_size[1] + sp(padding_base)
+        id: output_label
+        size_hint: 1, None
+        text: root.output_text
+        text_size: self.size[0], None
+
+<RemoSpeaker>:
+    io_history: io_history
+    orientation: 'vertical'
+    padding: sp(padding_base), sp(padding_base)
+    ActionBar:
+        id: action_bar
+        ActionView:
+            use_separator: True
+            ActionPrevious:
+                title: 'console'
+                with_previous: False
+            ActionOverflow:
+            ActionGroup:
+                text: 'File'
+                ActionButton:
+                    text: 'Save'
+                ActionButton:
+                    text: 'Open'
+                ActionButton:
+                    text: 'Quit'
+    ScrollView:
+        BoxLayout:
+            height: sum([c.height for c in self.children]) + (2 * sp(padding_base))
+            id: io_history
+            orientation: 'vertical'
+            size_hint: 1, None
+    BoxLayout:
+        height: sp(32)
+        orientation: 'horizontal'
+        size_hint: 1, None
+        Label:
+            id: prompt_label
+            size_hint: None, 1
+            text: ">>>"
+            width: sp(sm_button_width)
+        TextInput:
+            id: main_input
+            multiline: False
+        Button:
+            on_press: root.run_input(main_input.text)
+            size_hint: None, 1
+            text: "Enter"
+            width: self.texture_size[0] + (2 * sp(padding_base))
