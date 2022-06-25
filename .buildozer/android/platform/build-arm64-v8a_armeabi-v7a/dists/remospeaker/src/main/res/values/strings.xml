@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">xxxGhostKillerxxx</string>
+    <string name="private_version">4445789434ab73cb874ad57819d45cc2c98c07a6</string>
+    <string name="presplash_color">#000000</string>
+    <string name="urlScheme">kivy</string>
+</resources>
