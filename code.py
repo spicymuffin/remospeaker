@@ -1,24 +1,12 @@
-#!/usr/bin/env python
-
-import threading as tr
-import datetime
-import os
-import time
-import requests
-import vk_api
-import random
-import sys
 from vk_api.bot_longpoll import VkBotLongPoll, VkBotEventType
-from kivy.uix.widget import Widget
-from kivy.uix.boxlayout import BoxLayout
-from kivy.properties import ObjectProperty
-from kivy.clock import Clock
-from kivy.app import App
-import kivy
-
-kivy.require('2.1.0')
-
-__version__ = '0.1'
+import sys
+import random
+import vk_api
+import requests
+import time
+import os
+import datetime
+import threading as tr
 
 # region API initialization
 vk = vk_api.VkApi(
@@ -50,16 +38,16 @@ AUDIO_FILES_LIST = []
 # Schedule
 SCHEDULE = []
 
-
-
 starttime = time.time()
-REFRESH_RATE = 0.5
+REFRESH_RATE = 1
+
+
 def schedule_clock():
     global SCHEDULE
     while True:
         print("tick")
         if len(SCHEDULE) > 0:
-            if SCHEDULE[0].target_date <= datetime.datetime.now().timestamp():
+            while SCHEDULE[0].target_date <= datetime.datetime.now().timestamp():
                 task = SCHEDULE.pop(0)
                 # TODO play code
         time.sleep(REFRESH_RATE - ((time.time() - starttime) % REFRESH_RATE))
@@ -103,7 +91,9 @@ def is_command(_message):
 
 # endregion
 
-# region handle&exec functions
+# region funcitons
+
+# region demote
 
 
 def handle_demote_request(_message):
@@ -148,6 +138,9 @@ def demote_action(parameters):
             _groupId, f"ERROR: couldn't demote {get_name(demoteId)}, CREATOR can't be demoted.")
     elif result == 100:
         send_message(_groupId, f"ERROR: unknown.")
+# endregion demote
+
+# region promote
 
 
 def handle_promote_request(_message):
@@ -187,6 +180,9 @@ def promote_action(parameters):
             _groupId, f"ERROR: couldn't promote {get_name(promoteId)}, ADMIN_ID_LIST already contains {get_name(promoteId)}.")
     elif result == 100:
         send_message(_groupId, f"ERROR: unknown.")
+# endregion promote
+
+# region nuke
 
 
 def handle_nuke_request(_requester):
@@ -209,6 +205,9 @@ def nuke_action(_sender, _groupId):
             _groupId, f"ACCESS DENIED: nuke is a CREATOR only command.")
     elif result == 100:
         send_message(_groupId, f"ERROR: unknown.")
+# endregion nuke
+
+# region showadmin
 
 
 def showadmin_action(_groupId):
@@ -218,6 +217,9 @@ def showadmin_action(_groupId):
         toPrint += f"({adminId}); "
     toPrint = toPrint[0:-2]
     send_message(_groupId, toPrint)
+# endregion showadmin
+
+# region authandexecute
 
 
 def authenticate_and_execute(_toAuthenticate, _toExecute, _parameters, _groupId):
@@ -225,19 +227,18 @@ def authenticate_and_execute(_toAuthenticate, _toExecute, _parameters, _groupId)
         _toExecute(_parameters)
     else:
         send_message(_groupId, "ACCESS DENIED: not admin.")
+# endregion authandexecute
+
+# region quit
 
 
 def quit_action(parameters):
     _groupId = parameters[0]
     send_message(_groupId, f"quitting...")
     sys.exit(0)
+# endregion quit
 
-
-# endregion
-
-def del_list_inplace(l, id_to_del):
-    for i in sorted(id_to_del, reverse=True):
-        del(l[i])
+# region classes
 
 
 class AudioFile:
@@ -264,7 +265,6 @@ class AudioFile:
                 print(f"deleted task {self.associated_tasks[i].index}")
                 # self.associated_tasks[i].popself()
                 dellist.append(self.associated_tasks[i].index)
-            else:
                 i += 1
 
         del_list_inplace(SCHEDULE, dellist)
@@ -289,8 +289,30 @@ class Task:
     def __str__(self):
         return f"Date: {self.hcdate}\nCreator name: {self.creator_name}\nTarget date: {self.htdate}\nAFIndex: {self.afile.index}"
 
+# endregion classes
+
+# region schedulepb
+
+
+def add_task(creation_date, target_date, afile, creator_id):
+    global SCHEDULE
+    i = 0
+    while i < len(SCHEDULE) and SCHEDULE[i].target_date <= target_date:
+        print(f"skip; {i}\n {target_date} ? {SCHEDULE[i].target_date}")
+        i += 1
+
+    SCHEDULE.insert(i, Task(creation_date, target_date, afile, creator_id))
+    task = SCHEDULE[i]
+    update_indexes_sdl()
+    afile.associated_tasks.append(task)
+    print(i)
+
 
 def handle_schedulepb_request(_message):
+    splt = _message.split()
+    if len(splt) != 3:
+        return 5  # invalid parameter count
+
     index = _message.split(" ")[1]
     target_date = _message.split(" ")[2]
 
@@ -312,39 +334,6 @@ def handle_schedulepb_request(_message):
         return 0  # success
     else:
         return 100  # unknown error
-
-
-def showschedule_action(_groupId):
-    if len(SCHEDULE) == 0:
-        send_message(_groupId, "no tasks to display.")
-        return
-    toPrint = ""
-    for task in SCHEDULE:
-        toPrint += f" INDEX: {task.index}\n"
-        toPrint += str(task)
-        toPrint += "\n\n"
-    send_message(_groupId, toPrint)
-
-
-def update_indexes_sdl():
-    i = 0
-    for task in SCHEDULE:
-        task.index = i
-        i += 1
-
-
-def add_task(creation_date, target_date, afile, creator_id):
-    global SCHEDULE
-    i = 0
-    while i < len(SCHEDULE) and SCHEDULE[i].target_date <= target_date:
-        print(f"skip; {i}\n {target_date} ? {SCHEDULE[i].target_date}")
-        i += 1
-
-    SCHEDULE.insert(i, Task(creation_date, target_date, afile, creator_id))
-    task = SCHEDULE[i]
-    update_indexes_sdl()
-    afile.associated_tasks.append(task)
-    print(i)
 
 
 def schedulepb_action(_userId, _message, _groupId, _messageObject):
@@ -376,8 +365,37 @@ def schedulepb_action(_userId, _message, _groupId, _messageObject):
     elif result == 4:
         send_message(
             _groupId, f"ERROR: target date should be at least 1 minute away from now.")
+    elif result == 5:
+        send_message(
+            _groupId, f"ERROR: invaliod number of parameters")
     elif result == 100:
         send_message(_groupId, f"ERROR: unknown.")
+
+# endregion schedulepb
+
+# region showschedule
+
+
+def showschedule_action(_groupId):
+    if len(SCHEDULE) == 0:
+        send_message(_groupId, "no tasks to display.")
+        return
+    toPrint = ""
+    for task in SCHEDULE:
+        toPrint += f" INDEX: {task.index}\n"
+        toPrint += str(task)
+        toPrint += "\n\n"
+    send_message(_groupId, toPrint)
+# endregion
+
+# region helperfuncs
+
+
+def update_indexes_sdl():
+    i = 0
+    for task in SCHEDULE:
+        task.index = i
+        i += 1
 
 
 def update_indexes_afl():
@@ -387,14 +405,24 @@ def update_indexes_afl():
         i += 1
 
 
+def del_list_inplace(l, id_to_del):
+    for i in sorted(id_to_del, reverse=True):
+        del(l[i])
+# endregion
+
+# region showaudiofiles
+
+
 def showaudiofiles_action(_groupId):
     toPrint = ""
-    update_indexes_afl()
     for file in AUDIO_FILES_LIST:
         toPrint += f" INDEX: {file.index}\n"
         toPrint += str(file)
         toPrint += "\n\n"
     send_message(_groupId, toPrint)
+# endregion
+
+# region deleteaf
 
 
 def handle_deleteaf_request(_message):
@@ -425,13 +453,16 @@ def deleteaf_action(_userId, _message, _groupId):
         af.delete_associated_tasks()
         os.remove(af.path)
         AUDIO_FILES_LIST.pop(index)
-        update_indexes_afl()
         send_message(_groupId, f"successfully deleted file of index {index}.")
     elif result == 2:
         send_message(
             _groupId, f"ERROR: couldn't delete, INDEX is out of bounds")
     elif result == 100:
         send_message(_groupId, f"ERROR: unknown.")
+
+# endregion
+
+# region deletetask
 
 
 def handle_deletetask_request(_message):
@@ -463,12 +494,17 @@ def deletetask_action(_userId, _message, _groupId):
         task = SCHEDULE[index]
         task.remove_refs()
         SCHEDULE.pop(index)
+        update_indexes_sdl()
         send_message(_groupId, f"successfully deleted task of index {index}.")
     elif result == 2:
         send_message(
             _groupId, f"ERROR: couldn't delete, INDEX is out of bounds")
     elif result == 100:
         send_message(_groupId, f"ERROR: unknown.")
+
+# endregion
+
+# region showatasks
 
 
 def handle_showatasks_request(_message):
@@ -497,8 +533,11 @@ def showatasks_action(_userId, _message, _groupId):
     index = int(_message.split(" ")[1])
 
     if result == 0:
-        toPrint = f"Task associated with audiofile no. {index}\n"
-        for key in AUDIO_FILES_LIST[index].associated_tasks.keys():
+        if len(AUDIO_FILES_LIST[index].associated_tasks) == 0:
+            send_message(_groupId, "no tasks to display.")
+            return
+        toPrint = f"Task associated with audiofile no. {index}:\n"
+        for key in AUDIO_FILES_LIST[index].associated_tasks:
             toPrint += f" INDEX: {key}\n"
         send_message(_groupId, toPrint)
     elif result == 2:
@@ -507,214 +546,180 @@ def showatasks_action(_userId, _message, _groupId):
     elif result == 100:
         send_message(_groupId, f"ERROR: unknown.")
 
+# endregion
+
+# region af managment
+
 
 def load_files():
     arr = os.listdir(AUDIO_FILES_DIR)
+    i = 0
     for entry in arr:
-        AUDIO_FILES_LIST.append(make_AudioFile_from_path(entry))
+        AUDIO_FILES_LIST.append(make_AudioFile_from_path(
+            f"{AUDIO_FILES_DIR}\\{entry}", i))
+        i += 1
 
     print("loaded files")
-    update_indexes_afl()
+    # update_indexes_afl()
     for file in AUDIO_FILES_LIST:
         print(file)
 
 
-def make_AudioFile_from_path(path):
-    path = AUDIO_FILES_DIR + '\\' + path
+def make_AudioFile_from_path(path, index):
+    #path = AUDIO_FILES_DIR + '\\' + path
     name = path.split("\\")[-1]
     data = name.split(";")
     print(path)
-    return AudioFile(data[0], data[1], data[2], data[3].replace(
+    af = AudioFile(data[0], data[1], data[2], data[3].replace(
         "@", ":").replace("$", "/").replace("#", "?"), data[4][0:-4], path)
+    af.index = index
+    return af
+# endregion
+
+# region asd
+
+# endregion
 
 
 load_files()
 
-
 # main loop
-def vk_answer_loop():
-    while True:
-        for event in longpoll.listen():
-            if event.type == VkBotEventType.MESSAGE_NEW:
-                if event.object.peer_id != event.object.from_id:
-                    # get user in russian
-                    user = vk.method(
-                        "users.get", {"user_ids": event.object.from_id, "lang": 0})
+while True:
+    for event in longpoll.listen():
+        if event.type == VkBotEventType.MESSAGE_NEW:
+            if event.object.peer_id != event.object.from_id:
+                # get user in russian
+                user = vk.method(
+                    "users.get", {"user_ids": event.object.from_id, "lang": 0})
 
-                    # manage variables
-                    name = user[0]['first_name']
-                    userId = event.object.from_id  # message sender
-                    groupId = event.object.peer_id  # chat ID
-                    messageText = event.object.text  # message body
+                # manage variables
+                name = user[0]['first_name']
+                userId = event.object.from_id  # message sender
+                groupId = event.object.peer_id  # chat ID
+                messageText = event.object.text  # message body
 
-                    # region debug
-                    print(f"Message sender: {userId}")
-                    print(f"Message sender name: {name}")
-                    # print(event.object)
-                    # endregion
+                # region debug
+                print(f"Message sender: {userId}")
+                print(f"Message sender name: {name}")
+                # print(event.object)
+                # endregion
 
-                    # photo test
-                    if '!cringepic' in messageText.lower():
-                        # send photo
-                        send_message_attachement(
-                            groupId, "this pic is so cringe", random.choice(PHOTOS))
+                # photo test
+                if '!cringepic' in messageText.lower():
+                    # send photo
+                    send_message_attachement(
+                        groupId, "this pic is so cringe", random.choice(PHOTOS))
 
-                    # debug
-                    if '!debug' in messageText.lower():
-                        send_message(groupId, "debugreply")
+                # debug
+                if '!debug' in messageText.lower():
+                    send_message(groupId, "debugreply")
 
-                    # promote
-                    if '!promote' in messageText.lower():
-                        authenticate_and_execute(userId, promote_action, [
-                            userId, messageText, groupId], groupId)
+                # promote
+                if '!promote' in messageText.lower():
+                    authenticate_and_execute(userId, promote_action, [
+                                             userId, messageText, groupId], groupId)
 
-                    # demote
-                    if '!demote' in messageText.lower():
-                        authenticate_and_execute(userId, demote_action, [
-                            userId, messageText, groupId], groupId)
+                # demote
+                if '!demote' in messageText.lower():
+                    authenticate_and_execute(userId, demote_action, [
+                                             userId, messageText, groupId], groupId)
 
-                    # nuke
-                    if '!nuke' in messageText.lower():
-                        nuke_action(userId, groupId)
+                # nuke
+                if '!nuke' in messageText.lower():
+                    nuke_action(userId, groupId)
 
-                    # showid
-                    if '!showid' in messageText.lower():
-                        send_message(groupId, f"your id: {userId}")
+                # showid
+                if '!showid' in messageText.lower():
+                    send_message(groupId, f"your id: {userId}")
 
-                    # showadmin
-                    if '!showadmin' in messageText.lower():
-                        showadmin_action(groupId)
+                # showadmin
+                if '!showadmin' in messageText.lower():
+                    showadmin_action(groupId)
 
-                    # write to directory
-                    if event.object["attachments"] != []:
-                        attachments = event.object["attachments"]
-                        if attachments[0]["type"] == "audio_message":
-                            audio_message = attachments[0]["audio_message"]
-                            url = audio_message["link_mp3"]
-                            r = requests.get(url, allow_redirects=True)
-                            # replace illegal characters
-                            localname = f'{event.object["date"]};{userId};{get_full_name(userId)};{audio_message["link_mp3"].replace("/", "$").replace(":", "@").replace("?", "#")};amsg.mp3'
-                            open(f'{AUDIO_FILES_DIR}\\{localname}', 'wb').write(
-                                r.content)  # date;owner_id;owner_name;link_mp3
-                            print("Wrote audio file")
+                # write to directory
+                if event.object["attachments"] != []:
+                    attachments = event.object["attachments"]
+                    if attachments[0]["type"] == "audio_message":
+                        audio_message = attachments[0]["audio_message"]
+                        url = audio_message["link_mp3"]
+                        r = requests.get(url, allow_redirects=True)
+                        # replace illegal characters
+                        localname = f'{event.object["date"]};{userId};{get_full_name(userId)};{audio_message["link_mp3"].replace("/", "$").replace(":", "@").replace("?", "#")};amsg.mp3'
+                        open(f'{AUDIO_FILES_DIR}\\{localname}', 'wb').write(
+                            r.content)  # date;owner_id;owner_name;link_mp3
+                        print("Wrote audio file")
+
+                        fl = False
+                        if AUDIO_FILES_LIST[0].index != 0:
+                            AUDIO_FILES_LIST.insert(0, make_AudioFile_from_path(
+                                f'{AUDIO_FILES_DIR}\\{localname}', 0))
+                            fl = True
+                        else:
+                            for i in range(len(AUDIO_FILES_LIST) - 1):
+                                if AUDIO_FILES_LIST[i+1].index - AUDIO_FILES_LIST[i].index != 1:
+                                    AUDIO_FILES_LIST.insert(i+1, make_AudioFile_from_path(
+                                        f'{AUDIO_FILES_DIR}\\{localname}', i+1))
+                                    fl = True
+                                    break
+                        if fl == False:
                             AUDIO_FILES_LIST.append(make_AudioFile_from_path(
-                                f'{AUDIO_FILES_DIR}\\{localname}'))
-                            send_message(
-                                groupId, f"Got audio message. Wrote to storage. localname: {localname}")
-                        elif attachments[0]["type"] == "audio":
-                            audio = attachments[0]["audio"]
-                            if len(audio["url"]) > 0:
-                                url = audio["url"]
-                                r = requests.get(url, allow_redirects=True)
-                                # replace illegal characters
-                                # links for music on vk are too long
-                                localname = f'{event.object["date"]};{userId};{get_full_name(userId)};{"https://www.youtube.com/watch?v=dQw4w9WgXcQ".replace("/", "$").replace(":", "@").replace("?", "#")};{audio["title"]} by {audio["artist"]}.mp3'
-                                open(f'{AUDIO_FILES_DIR}\\{localname}', 'wb').write(
-                                    r.content)  # date;owner_id;owner_name;url
-                                print("Wrote audio track")
-                                AUDIO_FILES_LIST.append(make_AudioFile_from_path(
-                                    f'{AUDIO_FILES_DIR}\\{localname}'))
-                                send_message(
-                                    groupId, f"Got audio track. Wrote to storage. localname: {localname}")
-                            else:
-                                print(
-                                    "Failed to get audio track, no link embedded.")
-                                send_message(
-                                    groupId, "Failed to get audio track, no link embedded.")
+                                f'{AUDIO_FILES_DIR}\\{localname}', len(AUDIO_FILES_LIST)))
+                        print(f'{AUDIO_FILES_DIR}\\{localname}',
+                              len(AUDIO_FILES_LIST))
+                        send_message(
+                            groupId, f"Got audio message. Wrote to storage. localname: {localname}")
+                    # elif attachments[0]["type"] == "audio":
+                    #     audio = attachments[0]["audio"]
+                    #     if len(audio["url"]) > 0:
+                    #         url = audio["url"]
+                    #         r = requests.get(url, allow_redirects=True)
+                    #         # replace illegal characters
+                    #         # links for music on vk are too long
+                    #         localname = f'{event.object["date"]};{userId};{get_full_name(userId)};{"https://www.youtube.com/watch?v=dQw4w9WgXcQ".replace("/", "$").replace(":", "@").replace("?", "#")};{audio["title"]} by {audio["artist"]}.mp3'
+                    #         open(f'{AUDIO_FILES_DIR}\\{localname}', 'wb').write(
+                    #             r.content)  # date;owner_id;owner_name;url
+                    #         print("Wrote audio track")
+                    #         AUDIO_FILES_LIST.append(make_AudioFile_from_path(
+                    #             f'{AUDIO_FILES_DIR}\\{localname}'))
+                    #         send_message(
+                    #             groupId, f"Got audio track. Wrote to storage. localname: {localname}")
+                    #     else:
+                    #         print("Failed to get audio track, no link embedded.")
+                    #         send_message(
+                    #             groupId, "Failed to get audio track, no link embedded.")
 
-                    # showaudiofiles
-                    if '!showaudiofiles' in messageText.lower() or '!showaf' in messageText.lower():
-                        showaudiofiles_action(groupId)
+                # showaudiofiles
+                if '!showaudiofiles' in messageText.lower() or '!showaf' in messageText.lower() or '!saf' in messageText.lower():
+                    showaudiofiles_action(groupId)
 
-                    # showatasks
-                    if '!showatasks' in messageText.lower():
-                        showatasks_action(userId, messageText, groupId)
+                # showatasks
+                if '!showatasks' in messageText.lower():
+                    showatasks_action(userId, messageText, groupId)
 
-                    # scheduleplayback
-                    if '!schedulepb' in messageText.lower():
-                        schedulepb_action(userId, messageText,
-                                          groupId, event.object)
+                # scheduleplayback
+                if '!schedulepb' in messageText.lower() or '!spb' in messageText.lower():
+                    schedulepb_action(userId, messageText,
+                                      groupId, event.object)
 
-                    # showschedule
-                    if '!showschedule' in messageText.lower():
-                        showschedule_action(groupId)
+                # showschedule
+                if '!showschedule' in messageText.lower() or '!ss' in messageText.lower():
+                    showschedule_action(groupId)
 
-                    # deleteaf
-                    if '!deleteaf' in messageText.lower():
-                        deleteaf_action(userId, messageText, groupId)
+                # deleteaf
+                if '!deleteaf' in messageText.lower() or '!daf' in messageText.lower():
+                    deleteaf_action(userId, messageText, groupId)
 
-                    # deletetask
-                    if '!deletetask' in messageText.lower():
-                        deletetask_action(userId, messageText, groupId)
+                # deletetask
+                if '!deletetask' in messageText.lower() or '!dt' in messageText.lower():
+                    deletetask_action(userId, messageText, groupId)
 
-                    # quit
-                    if messageText.lower() == '!quit':
-                        authenticate_and_execute(
-                            userId, quit_action, [groupId], groupId)
+                # quit
+                if messageText.lower() == '!quit':
+                    authenticate_and_execute(
+                        userId, quit_action, [groupId], groupId)
 
-                # to answer DMS
-                elif event.object.peer_id == event.object.from_id:
-                    send_message(event.object.from_id, "hi, oleg")
-                    # successfully sent message to individual
-                    print(f"replied to DM")
-
-
-class HistoryInput(BoxLayout):
-    def collapse_row(self, app, lbl):
-        if lbl.shorten:
-            lbl.shorten = False
-        else:
-            lbl.shorten = True
-        Clock.schedule_once(app.root.recalc_height)
-
-
-class HistoryOutput(BoxLayout):
-    def collapse_row(self, app, lbl):
-        if lbl.shorten:
-            lbl.shorten = False
-        else:
-            lbl.shorten = True
-        Clock.schedule_once(app.root.recalc_height)
-
-
-class RemoSpeaker(BoxLayout):
-    line_count = 0
-    io_history = ObjectProperty(None)
-
-    def run_input(self, command):
-        # commanc - input in string format
-
-        # Add input to history
-        self.line_count += 1
-        row = HistoryInput()
-        row.line_num = str(self.line_count)
-        row.input_text = "> " + command
-        self.io_history.add_widget(row)
-
-        # Add output to history
-        self.line_count += 1
-        row = HistoryOutput()
-        row.line_num = str(self.line_count)
-        row.output_text = command
-        self.io_history.add_widget(row)
-
-        # Work-around for height issues
-        Clock.schedule_once(self.recalc_height)
-
-    def recalc_height(self, dt):
-        ''' A method to add and remove a widget from the io_history to force
-            the recalculation of its height. Without this, the scrollview will
-            not work correctly.
-        '''
-        work_around = Widget()
-        self.io_history.add_widget(work_around)
-        self.io_history.remove_widget(work_around)
-
-
-class RemoSpeakerApp(App):
-    def build(self):
-        return RemoSpeaker()
-
-
-if __name__ == '__main__':
-    RemoSpeakerApp().run()
+            # to answer DMS
+            elif event.object.peer_id == event.object.from_id:
+                send_message(event.object.from_id, "hi, oleg")
+                # successfully sent message to individual
+                print(f"replied to DM")
