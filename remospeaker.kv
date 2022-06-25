@@ -9,13 +9,7 @@
     size_hint: 1, None
     line_num: "0"
     input_text: "???"
-    Button:
-        halign: 'right'
-        on_press: root.collapse_row(app, input_label)
-        size_hint: None, 1
-        text: root.line_num
-        text_size: self.width - sp(padding_base), None
-        width: sp(sm_button_width)
+
     Label:
         id: input_label
         height: self.texture_size[1] + sp(padding_base)
@@ -24,7 +18,7 @@
         text_size: self.width, None
     Button:
         text: 'R'
-        size_hint: None, 0.5
+        size_hint: None, 1
         width: sp(sm_button_width)
 
 <HistoryOutput@BoxLayout>
@@ -33,13 +27,7 @@
     size_hint: 1, None
     line_num: "0"
     output_text: "???"
-    Button:
-        halign: 'right'
-        on_press: root.collapse_row(app, output_label)
-        size_hint: None, 1
-        text: root.line_num
-        text_size: self.width - sp(padding_base), None
-        width: sp(sm_button_width)
+
     Label:
         height: self.texture_size[1] + sp(padding_base)
         id: output_label
