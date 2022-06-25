@@ -18,14 +18,14 @@ import kivy
 from kivy.core.audio import SoundLoader
 from jnius import autoclass
 
-SERVICE_NAME = u'{packagename}.Service{servicename}'.format(
-    packagename=u'org.kivy.test',
-    servicename=u'Myservice'
-)
-service = autoclass(SERVICE_NAME)
-mActivity = autoclass(u'org.kivy.android.PythonActivity').mActivity
-argument = ''
-service.start(mActivity, argument)
+# SERVICE_NAME = u'{packagename}.Service{servicename}'.format(
+#     packagename=u'org.kivy.test',
+#     servicename=u'Myservice'
+# )
+# service = autoclass(SERVICE_NAME)
+# mActivity = autoclass(u'org.kivy.android.PythonActivity').mActivity
+# argument = ''
+# service.start(mActivity, argument)
 
 
 kivy.require('2.1.0')
