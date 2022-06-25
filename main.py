@@ -16,7 +16,7 @@ from kivy.clock import Clock
 from kivy.app import App
 import kivy
 from kivy.core.audio import SoundLoader
-from jnius import autoclass
+#from jnius import autoclass
 
 # SERVICE_NAME = u'{packagename}.Service{servicename}'.format(
 #     packagename=u'org.kivy.test',
