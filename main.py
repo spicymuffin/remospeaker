@@ -619,6 +619,7 @@ def make_AudioFile_from_path(path, index):
 def debug():
     print("############ <DEBUG START> ############")
     print(os.path.dirname(__file__))
+    print(__file__)
     print("############ <DEBUG END> ############")
 
 debug()
