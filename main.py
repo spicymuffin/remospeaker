@@ -19,7 +19,7 @@ from kivy.core.audio import SoundLoader
 
 from kivy.utils import platform
 
-if(platform == 'android'):
+if platform == 'android':
     import android
     from android.permissions import request_permissions, Permission
     request_permissions([Permission.READ_EXTERNAL_STORAGE, Permission.WRITE_EXTERNAL_STORAGE])
@@ -624,12 +624,20 @@ def debug():
 
 def startup():
     global AUDIO_FILES_DIR
-    AUDIO_FILES_DIR = os.path.dirname(__file__) + "/" + AUDIO_FILES_FOLDER_NAME
-    print(AUDIO_FILES_DIR)
-    if not os.path.exists(AUDIO_FILES_DIR):
-        os.makedirs(AUDIO_FILES_DIR)
-        print("Made audio files directory")
-
+    if platform == 'android':
+        print("PATH SHENANIGANS STARTING")
+        AUDIO_FILES_DIR = os.environ["HOME"] + "/" + AUDIO_FILES_FOLDER_NAME
+        print(AUDIO_FILES_DIR)
+        if not os.path.exists(AUDIO_FILES_DIR):
+            os.makedirs(AUDIO_FILES_DIR)
+            print("Made audio files directory")
+        print("PATH SHENANIGANS ENDING")
+    else:
+        AUDIO_FILES_DIR = os.path.dirname(__file__) + "/" + AUDIO_FILES_FOLDER_NAME
+        print(AUDIO_FILES_DIR)
+        if not os.path.exists(AUDIO_FILES_DIR):
+            os.makedirs(AUDIO_FILES_DIR)
+            print("Made audio files directory")
 startup()
 debug()
 load_files()
