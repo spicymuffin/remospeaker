@@ -611,6 +611,8 @@ def debug():
     print(os.path.dirname(__file__))
     print("############ <DEBUG END> ############")
 
+debug()
+
 load_files()
 
 
