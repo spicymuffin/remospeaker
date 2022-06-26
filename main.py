@@ -626,7 +626,8 @@ def startup():
     global AUDIO_FILES_DIR
     if platform == 'android':
         print("PATH SHENANIGANS STARTING")
-        AUDIO_FILES_DIR = os.environ["HOME"] + "/" + AUDIO_FILES_FOLDER_NAME
+        from android.storage import primary_external_storage_path
+        AUDIO_FILES_DIR = primary_external_storage_path + "/" + AUDIO_FILES_FOLDER_NAME
         print(AUDIO_FILES_DIR)
         if not os.path.exists(AUDIO_FILES_DIR):
             os.makedirs(AUDIO_FILES_DIR)
