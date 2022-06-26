@@ -71,7 +71,7 @@ def schedule_clock():
     global SCHEDULE
     while True:
         if len(SCHEDULE) > 0:
-            #while SCHEDULE[0].target_date <= datetime.datetime.now().timestamp():
+            # while SCHEDULE[0].target_date <= datetime.datetime.now().timestamp():
             while len(SCHEDULE) != 0:
                 task = SCHEDULE.pop(0)
                 sound = SoundLoader.load(task.afile.path)
@@ -578,6 +578,7 @@ def showatasks_action(_userId, _message, _groupId):
 
 
 def load_files():
+
     arr = os.listdir(AUDIO_FILES_DIR)
     i = 0
     for entry in arr:
@@ -605,7 +606,14 @@ def make_AudioFile_from_path(path, index):
 # endregion
 
 
+def debug():
+    print("############ <DEBUG START> ############")
+    print(os.path.dirname(__file__))
+    print("############ <DEBUG END> ############")
+
 load_files()
+
+
 
 def vk_longpoll_loop():
     while True:
@@ -641,12 +649,12 @@ def vk_longpoll_loop():
                     # promote
                     if '!promote' in messageText.lower():
                         authenticate_and_execute(userId, promote_action, [
-                                                userId, messageText, groupId], groupId)
+                            userId, messageText, groupId], groupId)
 
                     # demote
                     if '!demote' in messageText.lower():
                         authenticate_and_execute(userId, demote_action, [
-                                                userId, messageText, groupId], groupId)
+                            userId, messageText, groupId], groupId)
 
                     # nuke
                     if '!nuke' in messageText.lower():
@@ -689,7 +697,7 @@ def vk_longpoll_loop():
                                 AUDIO_FILES_LIST.append(make_AudioFile_from_path(
                                     f'{AUDIO_FILES_DIR}\\{localname}', len(AUDIO_FILES_LIST)))
                             print(f'{AUDIO_FILES_DIR}\\{localname}',
-                                len(AUDIO_FILES_LIST))
+                                  len(AUDIO_FILES_LIST))
                             send_message(
                                 groupId, f"Got audio message. Wrote to storage. localname: {localname}")
                         # elif attachments[0]["type"] == "audio":
@@ -723,7 +731,7 @@ def vk_longpoll_loop():
                     # scheduleplayback
                     if '!schedulepb' in messageText.lower() or '!spb' in messageText.lower():
                         schedulepb_action(userId, messageText,
-                                        groupId, event.object)
+                                          groupId, event.object)
 
                     # showschedule
                     if '!showschedule' in messageText.lower() or '!ss' in messageText.lower():
@@ -747,6 +755,7 @@ def vk_longpoll_loop():
                     send_message(event.object.from_id, "hi, oleg")
                     # successfully sent message to individual
                     print(f"replied to DM")
+
 
 vk_longpoll_loop_thread = tr.Thread(target=vk_longpoll_loop, args=())
 vk_longpoll_loop_thread.setDaemon(True)
