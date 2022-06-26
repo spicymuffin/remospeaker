@@ -16,6 +16,17 @@ from kivy.clock import Clock
 from kivy.app import App
 import kivy
 from kivy.core.audio import SoundLoader
+
+from kivy.utils import platform
+
+if(platform == 'android'):
+    import android
+    from android.permissions import request_permissions, Permission
+    request_permissions([Permission.READ_EXTERNAL_STORAGE, Permission.WRITE_EXTERNAL_STORAGE])
+    droid = android.Android()
+
+
+
 #from jnius import autoclass
 
 # SERVICE_NAME = u'{packagename}.Service{servicename}'.format(
