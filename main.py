@@ -62,7 +62,8 @@ CREATOR_ID = 392697013
 # ilya 337883597
 
 # Constants
-AUDIO_FILES_DIR = "C:\\Users\\luigi\\Desktop\\audio"
+AUDIO_FILES_FOLDER_NAME = "audiofiles"
+AUDIO_FILES_DIR = ""
 
 # Admin list
 ADMIN_ID_LIST = [CREATOR_ID]
@@ -588,7 +589,6 @@ def showatasks_action(_userId, _message, _groupId):
 
 
 def load_files():
-
     arr = os.listdir(AUDIO_FILES_DIR)
     i = 0
     for entry in arr:
@@ -619,14 +619,20 @@ def make_AudioFile_from_path(path, index):
 def debug():
     print("############ <DEBUG START> ############")
     print(os.path.dirname(__file__))
-    print(__file__)
     print("############ <DEBUG END> ############")
 
+
+def startup():
+    global AUDIO_FILES_DIR
+    AUDIO_FILES_DIR = os.path.dirname(__file__) + "/" + AUDIO_FILES_FOLDER_NAME
+    print(AUDIO_FILES_DIR)
+    if not os.path.exists(AUDIO_FILES_DIR):
+        os.makedirs(AUDIO_FILES_DIR)
+        print("Made audio files directory")
+
+startup()
 debug()
-
 load_files()
-
-
 
 def vk_longpoll_loop():
     while True:
