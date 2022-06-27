@@ -874,16 +874,25 @@ def startup():
     if platform == 'android':
         from android.storage import primary_external_storage_path
         AUDIO_FILES_DIR = primary_external_storage_path() + "/" + AUDIO_FILES_FOLDER_NAME
+        TTS_FILES_DIR = primary_external_storage_path() + "/" + TTS_FILES_FOLDER_NAME
         print(AUDIO_FILES_DIR)
+        print(TTS_FILES_DIR)
         if not os.path.exists(AUDIO_FILES_DIR):
             os.makedirs(AUDIO_FILES_DIR)
             print("Made audio files directory")
+        if not os.path.exists(AUDIO_FILES_DIR):
+            os.makedirs(AUDIO_FILES_DIR)
+            print("Made tts files directory")
     else:
         AUDIO_FILES_DIR = os.path.dirname(
             __file__) + "/" + AUDIO_FILES_FOLDER_NAME
-        print(AUDIO_FILES_DIR)
         TTS_FILES_DIR = os.path.dirname(
             __file__) + "/" + TTS_FILES_FOLDER_NAME
+        print(AUDIO_FILES_DIR)
+        print(TTS_FILES_DIR)
+        if not os.path.exists(AUDIO_FILES_DIR):
+            os.makedirs(AUDIO_FILES_DIR)
+            print("Made audio files directory")
         if not os.path.exists(TTS_FILES_DIR):
             os.makedirs(TTS_FILES_DIR)
             print("Made tts files directory")
