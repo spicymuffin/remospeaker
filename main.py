@@ -880,8 +880,8 @@ def startup():
         if not os.path.exists(AUDIO_FILES_DIR):
             os.makedirs(AUDIO_FILES_DIR)
             print("Made audio files directory")
-        if not os.path.exists(AUDIO_FILES_DIR):
-            os.makedirs(AUDIO_FILES_DIR)
+        if not os.path.exists(TTS_FILES_DIR):
+            os.makedirs(TTS_FILES_DIR)
             print("Made tts files directory")
     else:
         AUDIO_FILES_DIR = os.path.dirname(
