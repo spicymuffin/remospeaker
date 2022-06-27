@@ -32,7 +32,7 @@ kivy.require('2.1.0')
 __version__ = '0.1'
 
 # audio wizardry for android?????
-os.environ["KIVY_AUDIO"] = "ffpyplayer"
+os.environ["KIVY_AUDIO"] = "avplayer"
 
 class MusicPlayerAndroid(object):
     def __init__(self):
