@@ -627,7 +627,7 @@ def startup():
     if platform == 'android':
         print("PATH SHENANIGANS STARTING")
         from android.storage import primary_external_storage_path
-        AUDIO_FILES_DIR = primary_external_storage_path + "/" + AUDIO_FILES_FOLDER_NAME
+        AUDIO_FILES_DIR = primary_external_storage_path() + "/" + AUDIO_FILES_FOLDER_NAME
         print(AUDIO_FILES_DIR)
         if not os.path.exists(AUDIO_FILES_DIR):
             os.makedirs(AUDIO_FILES_DIR)
@@ -710,17 +710,18 @@ def vk_longpoll_loop():
                             print("Wrote audio file")
 
                             fl = False
-                            if AUDIO_FILES_LIST[0].index != 0:
-                                AUDIO_FILES_LIST.insert(0, make_AudioFile_from_path(
-                                    f'{AUDIO_FILES_DIR}\\{localname}', 0))
-                                fl = True
-                            else:
-                                for i in range(len(AUDIO_FILES_LIST) - 1):
-                                    if AUDIO_FILES_LIST[i+1].index - AUDIO_FILES_LIST[i].index != 1:
-                                        AUDIO_FILES_LIST.insert(i+1, make_AudioFile_from_path(
-                                            f'{AUDIO_FILES_DIR}\\{localname}', i+1))
-                                        fl = True
-                                        break
+                            if len(AUDIO_FILES_DIR) != 0:
+                                if AUDIO_FILES_LIST[0].index != 0:
+                                    AUDIO_FILES_LIST.insert(0, make_AudioFile_from_path(
+                                        f'{AUDIO_FILES_DIR}\\{localname}', 0))
+                                    fl = True
+                                else:
+                                    for i in range(len(AUDIO_FILES_LIST) - 1):
+                                        if AUDIO_FILES_LIST[i+1].index - AUDIO_FILES_LIST[i].index != 1:
+                                            AUDIO_FILES_LIST.insert(i+1, make_AudioFile_from_path(
+                                                f'{AUDIO_FILES_DIR}\\{localname}', i+1))
+                                            fl = True
+                                            break
                             if fl == False:
                                 AUDIO_FILES_LIST.append(make_AudioFile_from_path(
                                     f'{AUDIO_FILES_DIR}\\{localname}', len(AUDIO_FILES_LIST)))
