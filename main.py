@@ -710,7 +710,8 @@ def vk_longpoll_loop():
                             print("Wrote audio file")
 
                             fl = False
-                            if len(AUDIO_FILES_DIR) != 0:
+                            print()
+                            if len(AUDIO_FILES_LIST) > 0:
                                 if AUDIO_FILES_LIST[0].index != 0:
                                     AUDIO_FILES_LIST.insert(0, make_AudioFile_from_path(
                                         f'{AUDIO_FILES_DIR}\\{localname}', 0))
@@ -725,8 +726,6 @@ def vk_longpoll_loop():
                             if fl == False:
                                 AUDIO_FILES_LIST.append(make_AudioFile_from_path(
                                     f'{AUDIO_FILES_DIR}\\{localname}', len(AUDIO_FILES_LIST)))
-                            print(f'{AUDIO_FILES_DIR}\\{localname}',
-                                  len(AUDIO_FILES_LIST))
                             send_message(
                                 groupId, f"Got audio message. Wrote to storage. localname: {localname}")
                         # elif attachments[0]["type"] == "audio":
