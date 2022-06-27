@@ -395,15 +395,9 @@ def tts_action(_userId, _message, _groupId):
         if platform == 'android':
             from jnius import autoclass
 
-            # tts = gtts.gTTS(text=msg, lang=languagecode)
-            # print(f'{TTS_FILES_DIR}/tts.ogg')
-            # tts.save(f'{TTS_FILES_DIR}/tts.ogg')
-            # sound = SoundLoader.load(f'{TTS_FILES_DIR}/tts.ogg')
-            # sound.play()
-            # # sound = MusicPlayerAndroid()
-            # # sound.load(f'{TTS_FILES_DIR}/tts.wav')
-            # # sound.play()
-
+            tts = gtts.gTTS(text=msg, lang=languagecode)
+            print(f'{TTS_FILES_DIR}/tts.ogg')
+            tts.save(f'{TTS_FILES_DIR}/tts.ogg')
             MediaPlayer = autoclass('android.media.MediaPlayer')
 
             # create our player
