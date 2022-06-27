@@ -409,10 +409,6 @@ def tts_action(_userId, _message, _groupId):
             print('duration:', mPlayer.getDuration())
             mPlayer.start()
             print('current position:', mPlayer.getCurrentPosition())
-            time.sleep(5)
-
-            # then after the play:
-            mPlayer.release()
         else:
             tts = gtts.gTTS(text=msg, lang=languagecode)
             print(f'{TTS_FILES_DIR}/tts.mp3')
