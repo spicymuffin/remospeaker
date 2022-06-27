@@ -19,6 +19,7 @@ import kivy
 from kivy.core.audio import SoundLoader
 from kivy.utils import platform
 import gtts
+from jnius import autoclass
 
 
 if platform == 'android':
@@ -393,14 +394,30 @@ def tts_action(_userId, _message, _groupId):
         languagecode = _message.split(" ")[1]
         msg = " ".join(_message.split(" ")[2:])
         if platform == 'android':
-            tts = gtts.gTTS(text=msg, lang=languagecode)
-            print(f'{TTS_FILES_DIR}/tts.ogg')
-            tts.save(f'{TTS_FILES_DIR}/tts.ogg')
-            sound = SoundLoader.load(f'{TTS_FILES_DIR}/tts.ogg')
-            sound.play()
-            # sound = MusicPlayerAndroid()
-            # sound.load(f'{TTS_FILES_DIR}/tts.wav')
+            # tts = gtts.gTTS(text=msg, lang=languagecode)
+            # print(f'{TTS_FILES_DIR}/tts.ogg')
+            # tts.save(f'{TTS_FILES_DIR}/tts.ogg')
+            # sound = SoundLoader.load(f'{TTS_FILES_DIR}/tts.ogg')
             # sound.play()
+            # # sound = MusicPlayerAndroid()
+            # # sound.load(f'{TTS_FILES_DIR}/tts.wav')
+            # # sound.play()
+
+            MediaPlayer = autoclass('android.media.MediaPlayer')
+
+            # create our player
+            mPlayer = MediaPlayer()
+            mPlayer.setDataSource(f'{TTS_FILES_DIR}/tts.ogg')
+            mPlayer.prepare()
+
+            # play
+            print('duration:', mPlayer.getDuration())
+            mPlayer.start()
+            print('current position:', mPlayer.getCurrentPosition())
+            time.sleep(5)
+
+            # then after the play:
+            mPlayer.release()
         else:
             tts = gtts.gTTS(text=msg, lang=languagecode)
             print(f'{TTS_FILES_DIR}/tts.mp3')
