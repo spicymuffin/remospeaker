@@ -18,6 +18,7 @@ from kivy.app import App
 import kivy
 from kivy.core.audio import SoundLoader
 from kivy.utils import platform
+import gtts
 
 
 if platform == 'android':
@@ -105,6 +106,8 @@ CREATOR_ID = 392697013
 # Constants
 AUDIO_FILES_FOLDER_NAME = "audiofiles"
 AUDIO_FILES_DIR = ""
+TTS_FILES_FOLDER_NAME = "ttsfiles"
+TTS_FILES_DIR = ""
 
 # Admin list
 ADMIN_ID_LIST = [CREATOR_ID]
@@ -353,6 +356,58 @@ class Task:
         return f"Date: {self.hcdate}\nCreator name: {self.creator_name}\nTarget date: {self.htdate}\nAFIndex: {self.afile.index}"
 
 # endregion classes
+
+# region tts
+
+
+def handle_tts_request(_message):
+    try:
+        splt = _message.split(" ")
+        if len(splt) < 3:
+            return 5  # invalid parameter count
+
+        if not splt[1] in gtts.lang.tts_langs().keys():
+            return 1  # invalid language code
+
+        return 0  # success
+    except Exception as ex:
+        print(ex)
+        return 100  # unknown error
+
+
+def tts_action(_userId, _message, _groupId):
+
+    result = handle_tts_request(_message)
+
+    if result == 1:
+        send_message(_groupId, f"ERROR: invalid language code")
+        return  # abort if invalid langage code
+
+    if result == 5:
+        send_message(_groupId, f"ERROR: invalid parameter count")
+        return  # abort if invalid parameter count
+
+    if result == 100:
+        send_message(_groupId, f"ERROR: unknown.")
+        return  # abort if unknown error
+
+    if result == 0:
+        languagecode = _message.split(" ")[1]
+        msg = " ".join(_message.split(" ")[2:])
+        tts = gtts.gTTS(msg, lang=languagecode)
+        print(f'{TTS_FILES_DIR}/tts.mp3')
+        tts.save(f'{TTS_FILES_DIR}/tts.mp3')
+        if platform == 'android':
+            sound = MusicPlayerAndroid()
+            sound.load(f'{TTS_FILES_DIR}/tts.mp3')
+            sound.play()
+        else:
+            sound = SoundLoader.load(f'{TTS_FILES_DIR}/tts.mp3')
+            sound.play()
+        send_message(
+            _groupId, f'read {msg} in {gtts.lang.tts_langs()[languagecode]}')
+
+# endregion tts
 
 # region schedulepb
 
@@ -815,22 +870,23 @@ def debug():
 
 def startup():
     global AUDIO_FILES_DIR
+    global TTS_FILES_DIR
     if platform == 'android':
-        print("PATH SHENANIGANS STARTING")
         from android.storage import primary_external_storage_path
         AUDIO_FILES_DIR = primary_external_storage_path() + "/" + AUDIO_FILES_FOLDER_NAME
         print(AUDIO_FILES_DIR)
         if not os.path.exists(AUDIO_FILES_DIR):
             os.makedirs(AUDIO_FILES_DIR)
             print("Made audio files directory")
-        print("PATH SHENANIGANS ENDING")
     else:
         AUDIO_FILES_DIR = os.path.dirname(
             __file__) + "/" + AUDIO_FILES_FOLDER_NAME
         print(AUDIO_FILES_DIR)
-        if not os.path.exists(AUDIO_FILES_DIR):
-            os.makedirs(AUDIO_FILES_DIR)
-            print("Made audio files directory")
+        TTS_FILES_DIR = os.path.dirname(
+            __file__) + "/" + TTS_FILES_FOLDER_NAME
+        if not os.path.exists(TTS_FILES_DIR):
+            os.makedirs(TTS_FILES_DIR)
+            print("Made tts files directory")
 
 
 startup()
@@ -972,6 +1028,14 @@ def vk_longpoll_loop():
                     # deletetask
                     elif '!deletetask' in messageText.lower() or '!dt' in messageText.lower():
                         deletetask_action(userId, messageText, groupId)
+
+                    # ttstimed
+                    elif '!ttstimed' in messageText.lower() or '!ttst' in messageText.lower():
+                        deletetask_action(userId, messageText, groupId)
+
+                    # tts
+                    elif '!tts' in messageText.lower():
+                        tts_action(userId, messageText, groupId)
 
                     # quit
                     elif messageText.lower() == '!quit':
