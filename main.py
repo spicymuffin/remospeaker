@@ -31,10 +31,8 @@ kivy.require('2.1.0')
 
 __version__ = '0.1'
 
-
 # audio wizardry for android?????
 os.environ["KIVY_AUDIO"] = "ffpyplayer"
-
 
 class MusicPlayerAndroid(object):
     def __init__(self):
@@ -396,9 +394,9 @@ def tts_action(_userId, _message, _groupId):
         msg = " ".join(_message.split(" ")[2:])
         if platform == 'android':
             tts = gtts.gTTS(text=msg, lang=languagecode)
-            print(f'{TTS_FILES_DIR}/tts.mp3')
-            tts.save(f'{TTS_FILES_DIR}/tts.mp3')
-            sound = SoundLoader.load(f'{TTS_FILES_DIR}/tts.mp3')
+            print(f'{TTS_FILES_DIR}/tts.wav')
+            tts.save(f'{TTS_FILES_DIR}/tts.wav')
+            sound = SoundLoader.load(f'{TTS_FILES_DIR}/tts.wav')
             sound.play()
             # sound = MusicPlayerAndroid()
             # sound.load(f'{TTS_FILES_DIR}/tts.wav')
