@@ -736,6 +736,7 @@ def schedule_clock():
         while len(SCHEDULE) > 0 and SCHEDULE[0].target_date <= datetime.datetime.now().timestamp():
             # while len(SCHEDULE) != 0:
             task = SCHEDULE.pop(0)
+            print(task.afile.path)
             sound = SoundLoader.load(task.afile.path)
             sound.play()
             send_message(
@@ -847,7 +848,6 @@ def vk_longpoll_loop():
                             print("Wrote audio file")
 
                             fl = False
-                            print()
                             if len(AUDIO_FILES_LIST) > 0:
                                 if AUDIO_FILES_LIST[0].index != 0:
                                     AUDIO_FILES_LIST.insert(0, make_AudioFile_from_path(
