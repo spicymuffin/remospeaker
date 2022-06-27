@@ -19,6 +19,7 @@ import kivy
 from kivy.core.audio import SoundLoader
 from kivy.utils import platform
 import gtts
+import playsound
 
 
 if platform == 'android':
@@ -398,12 +399,9 @@ def tts_action(_userId, _message, _groupId):
         print(f'{TTS_FILES_DIR}/tts.mp3')
         tts.save(f'{TTS_FILES_DIR}/tts.mp3')
         if platform == 'android':
-            sound = MusicPlayerAndroid()
-            sound.load(f'{TTS_FILES_DIR}/tts.mp3')
-            sound.play()
+            playsound.playsound(f'{TTS_FILES_DIR}/tts.mp3')
         else:
-            sound = SoundLoader.load(f'{TTS_FILES_DIR}/tts.mp3')
-            sound.play()
+            playsound.playsound(f'{TTS_FILES_DIR}/tts.mp3')
         send_message(
             _groupId, f'read {msg} in {gtts.lang.tts_langs()[languagecode]}')
 
