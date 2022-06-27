@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 
+from kivy.logger import Logger
 import threading as tr
 import datetime
 import os
@@ -32,6 +33,56 @@ __version__ = '0.1'
 
 # audio wizardry for android?????
 os.environ["KIVY_AUDIO"] = "ffpyplayer"
+
+
+class MusicPlayerAndroid(object):
+    def __init__(self):
+        from jnius import autoclass
+        MediaPlayer = autoclass('android.media.MediaPlayer')
+        self.mplayer = MediaPlayer()
+
+        self.secs = 0
+        self.actualsong = ''
+        self.length = 0
+        self.isplaying = False
+
+    def __del__(self):
+        self.stop()
+        self.mplayer.release()
+        Logger.info('mplayer: deleted')
+
+    def load(self, filename):
+        try:
+            self.actualsong = filename
+            self.secs = 0
+            self.mplayer.setDataSource(filename)
+            self.mplayer.prepare()
+            self.length = self.mplayer.getDuration() / 1000
+            Logger.info('mplayer load: %s' % filename)
+            Logger.info('type: %s' % type(filename))
+            return True
+        except:
+            Logger.info('error in title: %s' % filename)
+            return False
+
+    def unload(self):
+        self.mplayer.reset()
+
+    def play(self):
+        self.mplayer.start()
+        self.isplaying = True
+        Logger.info('mplayer: play')
+
+    def stop(self):
+        self.mplayer.stop()
+        self.secs = 0
+        self.isplaying = False
+        Logger.info('mplayer: stop')
+
+    def seek(self, timepos_secs):
+        self.mplayer.seekTo(timepos_secs * 1000)
+        Logger.info('mplayer: seek %s' % int(timepos_secs))
+
 
 # region API initialization
 vk = vk_api.VkApi(
@@ -514,7 +565,6 @@ def schedulepbt_action(_userId, _message, _groupId, _messageObject):
 
 # endregion
 
-
 # region showschedule
 
 
@@ -740,8 +790,13 @@ def schedule_clock():
             # while len(SCHEDULE) != 0:
             task = SCHEDULE.pop(0)
             print(task.afile.path)
-            sound = SoundLoader.load(task.afile.path)
-            sound.play()
+            if platform == 'android':
+                sound = MusicPlayerAndroid()
+                sound.load(task.afile.path)
+                sound.play()
+            else:
+                sound = SoundLoader.load(task.afile.path)
+                sound.play()
             send_message(
                 groupId, f"played af of index: {task.afile.index} successfully, dequeing task. {len(SCHEDULE)} tasks remaining.")
         time.sleep(REFRESH_RATE - ((time.time() - starttime) % REFRESH_RATE))
