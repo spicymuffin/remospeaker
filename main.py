@@ -593,7 +593,7 @@ def load_files():
     i = 0
     for entry in arr:
         AUDIO_FILES_LIST.append(make_AudioFile_from_path(
-            f"{AUDIO_FILES_DIR}\\{entry}", i))
+            f"{AUDIO_FILES_DIR}/{entry}", i))
         i += 1
 
     print("loaded files")
@@ -603,8 +603,8 @@ def load_files():
 
 
 def make_AudioFile_from_path(path, index):
-    #path = AUDIO_FILES_DIR + '\\' + path
-    name = path.split("\\")[-1]
+    #path = AUDIO_FILES_DIR + '/' + path
+    name = path.split("/")[-1]
     data = name.split(";")
     print(path)
     af = AudioFile(data[0], data[1], data[2], data[3].replace(
@@ -705,7 +705,7 @@ def vk_longpoll_loop():
                             r = requests.get(url, allow_redirects=True)
                             # replace illegal characters
                             localname = f'{event.object["date"]};{userId};{get_full_name(userId)};{audio_message["link_mp3"].replace("/", "$").replace(":", "@").replace("?", "#")};amsg.mp3'
-                            open(f'{AUDIO_FILES_DIR}\\{localname}', 'wb').write(
+                            open(f'{AUDIO_FILES_DIR}/{localname}', 'wb').write(
                                 r.content)  # date;owner_id;owner_name;link_mp3
                             print("Wrote audio file")
 
@@ -714,18 +714,18 @@ def vk_longpoll_loop():
                             if len(AUDIO_FILES_LIST) > 0:
                                 if AUDIO_FILES_LIST[0].index != 0:
                                     AUDIO_FILES_LIST.insert(0, make_AudioFile_from_path(
-                                        f'{AUDIO_FILES_DIR}\\{localname}', 0))
+                                        f'{AUDIO_FILES_DIR}/{localname}', 0))
                                     fl = True
                                 else:
                                     for i in range(len(AUDIO_FILES_LIST) - 1):
                                         if AUDIO_FILES_LIST[i+1].index - AUDIO_FILES_LIST[i].index != 1:
                                             AUDIO_FILES_LIST.insert(i+1, make_AudioFile_from_path(
-                                                f'{AUDIO_FILES_DIR}\\{localname}', i+1))
+                                                f'{AUDIO_FILES_DIR}/{localname}', i+1))
                                             fl = True
                                             break
                             if fl == False:
                                 AUDIO_FILES_LIST.append(make_AudioFile_from_path(
-                                    f'{AUDIO_FILES_DIR}\\{localname}', len(AUDIO_FILES_LIST)))
+                                    f'{AUDIO_FILES_DIR}/{localname}', len(AUDIO_FILES_LIST)))
                             send_message(
                                 groupId, f"Got audio message. Wrote to storage. localname: {localname}")
                         # elif attachments[0]["type"] == "audio":
@@ -736,11 +736,11 @@ def vk_longpoll_loop():
                         #         # replace illegal characters
                         #         # links for music on vk are too long
                         #         localname = f'{event.object["date"]};{userId};{get_full_name(userId)};{"https://www.youtube.com/watch?v=dQw4w9WgXcQ".replace("/", "$").replace(":", "@").replace("?", "#")};{audio["title"]} by {audio["artist"]}.mp3'
-                        #         open(f'{AUDIO_FILES_DIR}\\{localname}', 'wb').write(
+                        #         open(f'{AUDIO_FILES_DIR}/{localname}', 'wb').write(
                         #             r.content)  # date;owner_id;owner_name;url
                         #         print("Wrote audio track")
                         #         AUDIO_FILES_LIST.append(make_AudioFile_from_path(
-                        #             f'{AUDIO_FILES_DIR}\\{localname}'))
+                        #             f'{AUDIO_FILES_DIR}/{localname}'))
                         #         send_message(
                         #             groupId, f"Got audio track. Wrote to storage. localname: {localname}")
                         #     else:
