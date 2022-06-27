@@ -30,6 +30,9 @@ kivy.require('2.1.0')
 __version__ = '0.1'
 
 
+# audio wizardry for android?????
+os.environ["KIVY_AUDIO"] = "ffpyplayer"
+
 # region API initialization
 vk = vk_api.VkApi(
     token="af710c5a4eff1ccc9e2136eaaf29fa1d4c33e57d7b6118a8b38226700add8b28f2825568d4a875890bdfc")
