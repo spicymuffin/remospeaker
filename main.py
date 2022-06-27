@@ -16,27 +16,14 @@ from kivy.clock import Clock
 from kivy.app import App
 import kivy
 from kivy.core.audio import SoundLoader
-
 from kivy.utils import platform
+
 
 if platform == 'android':
     import android
     from android.permissions import request_permissions, Permission
-    request_permissions([Permission.READ_EXTERNAL_STORAGE, Permission.WRITE_EXTERNAL_STORAGE])
-
-
-
-#from jnius import autoclass
-
-# SERVICE_NAME = u'{packagename}.Service{servicename}'.format(
-#     packagename=u'org.kivy.test',
-#     servicename=u'Myservice'
-# )
-# service = autoclass(SERVICE_NAME)
-# mActivity = autoclass(u'org.kivy.android.PythonActivity').mActivity
-# argument = ''
-# service.start(mActivity, argument)
-
+    request_permissions([Permission.READ_EXTERNAL_STORAGE,
+                        Permission.WRITE_EXTERNAL_STORAGE])
 
 kivy.require('2.1.0')
 
@@ -77,22 +64,7 @@ SCHEDULE = []
 starttime = time.time()
 REFRESH_RATE = 1
 
-
-def schedule_clock():
-    global SCHEDULE
-    while True:
-        if len(SCHEDULE) > 0:
-            # while SCHEDULE[0].target_date <= datetime.datetime.now().timestamp():
-            while len(SCHEDULE) != 0:
-                task = SCHEDULE.pop(0)
-                sound = SoundLoader.load(task.afile.path)
-                sound.play()
-        time.sleep(REFRESH_RATE - ((time.time() - starttime) % REFRESH_RATE))
-
-
-schedule_clock_thread = tr.Thread(target=schedule_clock, args=())
-schedule_clock_thread.setDaemon(True)
-schedule_clock_thread.start()
+groupId = None
 
 
 # region interal functions
@@ -346,30 +318,40 @@ def add_task(creation_date, target_date, afile, creator_id):
 
 
 def handle_schedulepb_request(_message):
-    splt = _message.split()
-    if len(splt) != 3:
-        return 5  # invalid parameter count
-
-    index = _message.split(" ")[1]
-    target_date = _message.split(" ")[2]
-
     try:
-        index = int(index)
-    except:
-        return 1  # index not an integer
-    try:
-        date = datetime.datetime.strptime(
-            target_date, "%Y-%m-%d@%H:%M:%S").timestamp()
-    except:
-        return 2  # date bad format
+        splt = _message.split(" ")
+        if len(splt) != 3:
+            return 5  # invalid parameter count
 
-    if len(AUDIO_FILES_LIST) <= index:
-        return 3  # invalid index
-    elif date <= int(time.time()) + 60:
-        return 4  # date should be at least 1 minute away from now
-    elif len(AUDIO_FILES_LIST) > index:  # TODO index can go lower than 0
-        return 0  # success
-    else:
+        index = _message.split(" ")[1]
+        target_date = _message.split(" ")[2]
+
+        try:
+            index = int(index)
+        except:
+            return 1  # index not an integer
+        try:
+            date = datetime.datetime.strptime(
+                target_date, "%Y-%m-%d@%H:%M:%S").timestamp()
+        except:
+            return 2  # date bad format
+
+        indexflag = False
+        requestindex = -1
+        for i in range(len(AUDIO_FILES_LIST)):
+            if AUDIO_FILES_LIST[i].index == index:
+                requestindex = i
+                indexflag = True
+                break
+
+        if date <= int(time.time()) + 5:
+            return 4  # date should be at least 5 secs away from now
+
+        if indexflag:
+            return 0  # success
+        else:
+            return 3  # audio file not present
+    except:
         return 100  # unknown error
 
 
@@ -387,33 +369,154 @@ def schedulepb_action(_userId, _message, _groupId, _messageObject):
             _groupId, f"ERROR: couldn't complete request, parameter DATE is invalid.")
         return  # abort if parameter is inivalid
 
+    if result == 3:
+        send_message(
+            _groupId, f"ERROR: couldn't schedule, INDEX out of bounds.")
+        return  # abort if index abort if audio file index not present
+
+    if result == 4:
+        send_message(
+            _groupId, f"ERROR: target date should be at least 5 secs away from now.")
+        return  # abort if date is too close
+
+    if result == 5:
+        send_message(
+            _groupId, f"ERROR: invalid number of parameters")
+        return  # abort if invalid number of parameters
+
+    elif result == 100:
+        send_message(_groupId, f"ERROR: unknown.")
+        return  # abort if unknown error
+
     index = int(_message.split(" ")[1])
     target_date = datetime.datetime.strptime(
         _message.split(" ")[2], "%Y-%m-%d@%H:%M:%S").timestamp()
 
     if result == 0:
+        requestindex = -1
+        for i in range(len(AUDIO_FILES_LIST)):
+            if AUDIO_FILES_LIST[i].index == index:
+                requestindex = i
+                break
         add_task(_messageObject["date"], target_date,
-                 AUDIO_FILES_LIST[index], _userId)
+                 AUDIO_FILES_LIST[requestindex], _userId)
         send_message(
             _groupId, f"scheduled playback:\nFile: {index}\nDate: {_message.split(' ')[2]}")
-    elif result == 3:
-        send_message(
-            _groupId, f"ERROR: couldn't schedule, INDEX out of bounds.")
-    elif result == 4:
-        send_message(
-            _groupId, f"ERROR: target date should be at least 1 minute away from now.")
-    elif result == 5:
-        send_message(
-            _groupId, f"ERROR: invaliod number of parameters")
-    elif result == 100:
-        send_message(_groupId, f"ERROR: unknown.")
+
 
 # endregion schedulepb
+
+# region schedulepbtimer
+
+
+def handle_schedulepbt_request(_message):
+    try:
+        splt = _message.split(" ")
+        if len(splt) != 3:
+            return 5  # invalid parameter count
+
+        index = _message.split(" ")[1]
+        delta = _message.split(" ")[2].lower()
+
+        try:
+            index = int(index)
+        except:
+            return 1  # index not an integer
+        allowed_metrics = ['s', 'm', 'h', 'd']
+        if delta[-1] not in allowed_metrics:
+            return 2  # incorrect metrics
+        try:
+            intdelta = int(delta[0:-1])
+        except:
+            return 3  # delta not an integer
+
+        indexflag = False
+        requestindex = -1
+        for i in range(len(AUDIO_FILES_LIST)):
+            if AUDIO_FILES_LIST[i].index == index:
+                requestindex = i
+                indexflag = True
+                break
+
+        if indexflag:
+            return 0  # success
+        else:
+            return 4  # index not present
+    except:
+        return 100  # unknown error
+
+
+def schedulepbt_action(_userId, _message, _groupId, _messageObject):
+
+    result = handle_schedulepbt_request(_message)
+
+    if result == 1:
+        send_message(
+            _groupId, f"ERROR: parameter ID is invalid.")
+        return  # abort if parameter is inivalid
+
+    if result == 2:
+        send_message(
+            _groupId, f"ERROR: incorrect metrics.")
+        return  # abort if parameter is inivalid
+
+    if result == 3:
+        send_message(
+            _groupId, f"ERROR: delta not an integer.")
+        return  # abort if parameter is inivalid
+
+    if result == 4:
+        send_message(
+            _groupId, f"ERROR: audio file index not present")
+        return  # abort if audio file index not present
+
+    if result == 5:
+        send_message(
+            _groupId, f"ERROR: invalid number of parameters")
+        return  # abort if invalid number of parameters
+
+    if result == 100:
+        send_message(_groupId, f"ERROR: unknown.")
+        return  # abort if unknown error
+
+    mul = 0
+    delta = _message.split(" ")[2].lower()
+    metric = delta[-1]
+    intdelta = int(delta[0:-1])
+    if metric == "s":
+        mul = 1
+    elif metric == "m":
+        mul = 1 * 60
+    elif metric == "h":
+        mul = 1 * 60 * 60
+    elif metric == "d":
+        mul = 1 * 60 * 60 * 24
+
+    index = int(_message.split(" ")[1])
+    target_date = int(time.time()) + intdelta * mul
+
+    if result == 0:
+        requestindex = -1
+        for i in range(len(AUDIO_FILES_LIST)):
+            if AUDIO_FILES_LIST[i].index == index:
+                requestindex = i
+                break
+        add_task(_messageObject["date"], target_date,
+                 AUDIO_FILES_LIST[requestindex], _userId)
+        printdate = str(datetime.datetime.fromtimestamp(
+            int(target_date))).replace(" ", "@")
+        send_message(
+            _groupId, f"scheduled playback:\nFile: {index}\nDate: {printdate}")
+
+
+# endregion
+
 
 # region showschedule
 
 
 def showschedule_action(_groupId):
+    global SCHEDULE
     if len(SCHEDULE) == 0:
         send_message(_groupId, "no tasks to display.")
         return
@@ -451,6 +554,9 @@ def del_list_inplace(l, id_to_del):
 
 
 def showaudiofiles_action(_groupId):
+    if len(AUDIO_FILES_LIST) == 0:
+        send_message(_groupId, "no audio files to display.")
+        return
     toPrint = ""
     for file in AUDIO_FILES_LIST:
         toPrint += f" INDEX: {file.index}\n"
@@ -468,12 +574,15 @@ def handle_deleteaf_request(_message):
         index = int(_message.split(" ")[1])
     except:
         return 1  # invalid index
-    if len(AUDIO_FILES_LIST) <= index:
-        return 2  # invalid index
-    elif len(AUDIO_FILES_LIST) > index:
-        return 0  # success
-    else:
-        return 100  # unknown error
+    removeindex = -1
+    for i in range(len(AUDIO_FILES_LIST)):
+        if AUDIO_FILES_LIST[i].index == index:
+            removeindex = i
+            return 0
+
+    if removeindex == -1:
+        return 2  # index not in aflist
+    return 100  # unknown error
 
 
 def deleteaf_action(_userId, _message, _groupId):
@@ -486,11 +595,16 @@ def deleteaf_action(_userId, _message, _groupId):
     index = int(_message.split(" ")[1])
 
     if result == 0:
-        af = AUDIO_FILES_LIST[index]
+        removeindex = -1
+        for i in range(len(AUDIO_FILES_LIST)):
+            if AUDIO_FILES_LIST[i].index == index:
+                removeindex = i
+        af = AUDIO_FILES_LIST[removeindex]
         af.delete_associated_tasks()
         os.remove(af.path)
-        AUDIO_FILES_LIST.pop(index)
-        send_message(_groupId, f"successfully deleted file of index {index}.")
+        AUDIO_FILES_LIST.pop(removeindex)
+        send_message(
+            _groupId, f"successfully deleted file of index {index}.")
     elif result == 2:
         send_message(
             _groupId, f"ERROR: couldn't delete, INDEX is out of bounds")
@@ -616,6 +730,24 @@ def make_AudioFile_from_path(path, index):
 # endregion
 
 
+def schedule_clock():
+    global SCHEDULE
+    while True:
+        while len(SCHEDULE) > 0 and SCHEDULE[0].target_date <= datetime.datetime.now().timestamp():
+            # while len(SCHEDULE) != 0:
+            task = SCHEDULE.pop(0)
+            sound = SoundLoader.load(task.afile.path)
+            sound.play()
+            send_message(
+                groupId, f"played af of index: {task.afile.index} successfully, dequeing task. {len(SCHEDULE)} tasks remaining.")
+        time.sleep(REFRESH_RATE - ((time.time() - starttime) % REFRESH_RATE))
+
+
+schedule_clock_thread = tr.Thread(target=schedule_clock, args=())
+schedule_clock_thread.setDaemon(True)
+schedule_clock_thread.start()
+
+
 def debug():
     print("############ <DEBUG START> ############")
     print(os.path.dirname(__file__))
@@ -634,16 +766,21 @@ def startup():
             print("Made audio files directory")
         print("PATH SHENANIGANS ENDING")
     else:
-        AUDIO_FILES_DIR = os.path.dirname(__file__) + "/" + AUDIO_FILES_FOLDER_NAME
+        AUDIO_FILES_DIR = os.path.dirname(
+            __file__) + "/" + AUDIO_FILES_FOLDER_NAME
         print(AUDIO_FILES_DIR)
         if not os.path.exists(AUDIO_FILES_DIR):
             os.makedirs(AUDIO_FILES_DIR)
             print("Made audio files directory")
+
+
 startup()
 debug()
 load_files()
 
+
 def vk_longpoll_loop():
+    global groupId
     while True:
         for event in longpoll.listen():
             if event.type == VkBotEventType.MESSAGE_NEW:
@@ -671,33 +808,33 @@ def vk_longpoll_loop():
                             groupId, "this pic is so cringe", random.choice(PHOTOS))
 
                     # debug
-                    if '!debug' in messageText.lower():
+                    elif '!debug' in messageText.lower():
                         send_message(groupId, "debugreply")
 
                     # promote
-                    if '!promote' in messageText.lower():
+                    elif '!promote' in messageText.lower():
                         authenticate_and_execute(userId, promote_action, [
                             userId, messageText, groupId], groupId)
 
                     # demote
-                    if '!demote' in messageText.lower():
+                    elif '!demote' in messageText.lower():
                         authenticate_and_execute(userId, demote_action, [
                             userId, messageText, groupId], groupId)
 
                     # nuke
-                    if '!nuke' in messageText.lower():
+                    elif '!nuke' in messageText.lower():
                         nuke_action(userId, groupId)
 
                     # showid
-                    if '!showid' in messageText.lower():
+                    elif '!showid' in messageText.lower():
                         send_message(groupId, f"your id: {userId}")
 
                     # showadmin
-                    if '!showadmin' in messageText.lower():
+                    elif '!showadmin' in messageText.lower():
                         showadmin_action(groupId)
 
                     # write to directory
-                    if event.object["attachments"] != []:
+                    elif event.object["attachments"] != []:
                         attachments = event.object["attachments"]
                         if attachments[0]["type"] == "audio_message":
                             audio_message = attachments[0]["audio_message"]
@@ -749,32 +886,37 @@ def vk_longpoll_loop():
                         #             groupId, "Failed to get audio track, no link embedded.")
 
                     # showaudiofiles
-                    if '!showaudiofiles' in messageText.lower() or '!showaf' in messageText.lower() or '!saf' in messageText.lower():
+                    elif '!showaudiofiles' in messageText.lower() or '!showaf' in messageText.lower() or '!saf' in messageText.lower():
                         showaudiofiles_action(groupId)
 
                     # showatasks
-                    if '!showatasks' in messageText.lower():
+                    elif '!showatasks' in messageText.lower():
                         showatasks_action(userId, messageText, groupId)
 
+                    # scheduleplaybacktimer
+                    elif '!scheduleplaybacktimer' in messageText.lower() or '!spbt' in messageText.lower():
+                        schedulepbt_action(userId, messageText,
+                                           groupId, event.object)
+
                     # scheduleplayback
-                    if '!schedulepb' in messageText.lower() or '!spb' in messageText.lower():
+                    elif '!scheduleplayback' in messageText.lower() or '!spb' in messageText.lower():
                         schedulepb_action(userId, messageText,
                                           groupId, event.object)
 
                     # showschedule
-                    if '!showschedule' in messageText.lower() or '!ss' in messageText.lower():
+                    elif '!showschedule' in messageText.lower() or '!ss' in messageText.lower():
                         showschedule_action(groupId)
 
                     # deleteaf
-                    if '!deleteaf' in messageText.lower() or '!daf' in messageText.lower():
+                    elif '!deleteaf' in messageText.lower() or '!daf' in messageText.lower():
                         deleteaf_action(userId, messageText, groupId)
 
                     # deletetask
-                    if '!deletetask' in messageText.lower() or '!dt' in messageText.lower():
+                    elif '!deletetask' in messageText.lower() or '!dt' in messageText.lower():
                         deletetask_action(userId, messageText, groupId)
 
                     # quit
-                    if messageText.lower() == '!quit':
+                    elif messageText.lower() == '!quit':
                         authenticate_and_execute(
                             userId, quit_action, [groupId], groupId)
 
