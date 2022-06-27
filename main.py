@@ -400,11 +400,11 @@ def tts_action(_userId, _message, _groupId):
             print(f'{TTS_FILES_DIR}/tts.wav')
             tts.save(f'{TTS_FILES_DIR}/tts.wav')
 
-            sound = SoundLoader.load(f'{TTS_FILES_DIR}/tts.wav')
-            sound.play()
-            # sound = MusicPlayerAndroid()
-            # sound.load(f'{TTS_FILES_DIR}/tts.wav')
+            # sound = SoundLoader.load(f'{TTS_FILES_DIR}/tts.wav')
             # sound.play()
+            sound = MusicPlayerAndroid()
+            sound.load(f'{TTS_FILES_DIR}/tts.wav')
+            sound.play()
         else:
             tts = gtts.gTTS(msg, lang=languagecode)
             print(f'{TTS_FILES_DIR}/tts.mp3')
