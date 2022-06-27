@@ -394,9 +394,9 @@ def tts_action(_userId, _message, _groupId):
         msg = " ".join(_message.split(" ")[2:])
         if platform == 'android':
             tts = gtts.gTTS(text=msg, lang=languagecode)
-            print(f'{TTS_FILES_DIR}/tts.wav')
-            tts.save(f'{TTS_FILES_DIR}/tts.wav')
-            sound = SoundLoader.load(f'{TTS_FILES_DIR}/tts.wav')
+            print(f'{TTS_FILES_DIR}/tts.ogg')
+            tts.save(f'{TTS_FILES_DIR}/tts.ogg')
+            sound = SoundLoader.load(f'{TTS_FILES_DIR}/tts.ogg')
             sound.play()
             # sound = MusicPlayerAndroid()
             # sound.load(f'{TTS_FILES_DIR}/tts.wav')
