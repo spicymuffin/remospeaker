@@ -14,8 +14,8 @@ def start_service():
     from android import mActivity
     context =  mActivity.getApplicationContext()
     SERVICE_NAME = str(context.getPackageName()) + '.Service' + 'VKBOT'
-    service = autoclass(SERVICE_NAME)
     print(SERVICE_NAME)
+    service = autoclass(SERVICE_NAME)
     service.start(mActivity,'')
     return service
 
