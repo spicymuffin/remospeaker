@@ -71,7 +71,7 @@ class RemoSpeakerApp(App):
         from jnius import autoclass
         from android import mActivity
         context = mActivity.getApplicationContext()
-        SERVICE_NAME = str(context.getPackageName()) + '.Service' + 'ser'
+        SERVICE_NAME = str(context.getPackageName()) + '.Service' + 'Worker'
         print(SERVICE_NAME)
         service = autoclass(SERVICE_NAME)
         service.start(mActivity, '')
