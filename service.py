@@ -905,7 +905,7 @@ def schedule_clock():
         time.sleep(REFRESH_RATE - ((time.time() - starttime) % REFRESH_RATE))
         print("CLOCK\nCLOCK\nCLOCK\nCLOCK\nCLOCK\n")
 
-print("CLOCK\nCLOCK\nCLOCK\nCLOCK\nCLOCK\n")
+print("CLOCKCLOCKCLOCKCLOCKCLOCKCLOCKCLOCKCLOCK")
 startup()
 debug()
 load_files()
