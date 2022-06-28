@@ -1,5 +1,3 @@
-#!/usr/bin/env python
-
 from kivy.logger import Logger
 import threading as tr
 import datetime
@@ -20,19 +18,46 @@ from kivy.core.audio import SoundLoader
 from kivy.utils import platform
 import gtts
 
-
-# if platform == 'android':
-#     import android
-#     from android.permissions import request_permissions, Permission
-#     request_permissions([Permission.READ_EXTERNAL_STORAGE,
-#                         Permission.WRITE_EXTERNAL_STORAGE])
-
 kivy.require('2.1.0')
-
 __version__ = '0.1'
 
-# audio wizardry for android?????
-os.environ["KIVY_AUDIO"] = "avplayer"
+# region API initialization
+vk = vk_api.VkApi(
+    token="af710c5a4eff1ccc9e2136eaaf29fa1d4c33e57d7b6118a8b38226700add8b28f2825568d4a875890bdfc")
+vk._auth_token()
+vk.get_api()
+longpoll = VkBotLongPoll(vk, 199164285)
+# endregion
+
+# region variables
+# region IDs
+ILYA_ID = 392697013
+CREATOR_ID = 392697013
+groupId = None
+# me   392697013
+# ilya 337883597
+# endregion
+# region directory management
+AUDIO_FILES_FOLDER_NAME = "audiofiles"
+AUDIO_FILES_DIR = ""
+TTS_FILES_FOLDER_NAME = "ttsfiles"
+TTS_FILES_DIR = ""
+# endregion
+# region lists
+# Photo list (upload to bot's community)
+PHOTOS = ["photo-199164285_457239021", "photo-199164285_457239019",
+          "photo-199164285_457239022", "photo-199164285_457239023"]
+ADMIN_ID_LIST = [CREATOR_ID]
+AUDIO_FILES_LIST = []
+SCHEDULE = []
+# endregion
+# region time management
+starttime = None
+REFRESH_RATE = 1
+# endregion
+# endregion
+
+# region classes
 
 
 class MusicPlayerAndroid(object):
@@ -84,46 +109,57 @@ class MusicPlayerAndroid(object):
         Logger.info('mplayer: seek %s' % int(timepos_secs))
 
 
-# region API initialization
-vk = vk_api.VkApi(
-    token="af710c5a4eff1ccc9e2136eaaf29fa1d4c33e57d7b6118a8b38226700add8b28f2825568d4a875890bdfc")
-vk._auth_token()
-vk.get_api()
-longpoll = VkBotLongPoll(vk, 199164285)
-# endregion
+class AudioFile:
+    def __init__(self, date, creator_id, creator_name, link, filename, path):
+        self.filename = filename
+        self.date = date
+        self.creator_id = creator_id
+        value = datetime.datetime.fromtimestamp(int(date))
+        self.hdate = f"{value:%Y-%m-%d@%H:%M:%S}"
+        self.creator_name = creator_name
+        self.path = path
+        self.link = link
+        self.index = -1
+        self.associated_tasks = []
 
-# Photo list (upload to bot's community)
-PHOTOS = ["photo-199164285_457239021", "photo-199164285_457239019",
-          "photo-199164285_457239022", "photo-199164285_457239023"]
+    def __str__(self):
+        return f"Date: {self.hdate}\nCreator name: {self.creator_name}\nLink: {self.link}\nName: {self.filename}\nAssociated tasks: {len(self.associated_tasks)}"
 
-# Constant IDs
-ILYA_ID = 392697013
-CREATOR_ID = 392697013
-# me   392697013
-# ilya 337883597
+    def delete_associated_tasks(self):
+        dellist = []
+        i = 0
+        while i < len(self.associated_tasks):
+            if self.associated_tasks[i].afile.index == self.index:
+                print(f"deleted task {self.associated_tasks[i].index}")
+                # self.associated_tasks[i].popself()
+                dellist.append(self.associated_tasks[i].index)
+                i += 1
 
-# Constants
-AUDIO_FILES_FOLDER_NAME = "audiofiles"
-AUDIO_FILES_DIR = ""
-TTS_FILES_FOLDER_NAME = "ttsfiles"
-TTS_FILES_DIR = ""
-
-# Admin list
-ADMIN_ID_LIST = [CREATOR_ID]
-
-# Audio files list
-AUDIO_FILES_LIST = []
-
-# Schedule
-SCHEDULE = []
-
-starttime = time.time()
-REFRESH_RATE = 1
-
-groupId = None
+        del_list_inplace(SCHEDULE, dellist)
 
 
-# region funcitons
+class Task:
+    def __init__(self, creation_date, target_date, afile, creator_id):
+        self.creation_date = creation_date
+        self.target_date = target_date
+        value = datetime.datetime.fromtimestamp(int(creation_date))
+        self.hcdate = f"{value:%Y-%m-%d@%H:%M:%S}"
+        value = datetime.datetime.fromtimestamp(int(target_date))
+        self.htdate = f"{value:%Y-%m-%d@%H:%M:%S}"
+        self.afile = afile
+        self.creator_id = creator_id
+        self.creator_name = get_full_name(creator_id)
+        self.index = -1
+
+    def remove_refs(self):
+        self.afile.associated_tasks.remove(self)
+
+    def __str__(self):
+        return f"Date: {self.hcdate}\nCreator name: {self.creator_name}\nTarget date: {self.htdate}\nAFIndex: {self.afile.index}"
+
+# endregion classes
+
+# region command funcitons
 
 # region interal functions
 
@@ -300,61 +336,10 @@ def authenticate_and_execute(_toAuthenticate, _toExecute, _parameters, _groupId)
 def quit_action(parameters):
     _groupId = parameters[0]
     send_message(_groupId, f"quitting...")
-    sys.exit(0)
+    exit(0)
+
+
 # endregion quit
-
-# region classes
-
-
-class AudioFile:
-    def __init__(self, date, creator_id, creator_name, link, filename, path):
-        self.filename = filename
-        self.date = date
-        self.creator_id = creator_id
-        value = datetime.datetime.fromtimestamp(int(date))
-        self.hdate = f"{value:%Y-%m-%d@%H:%M:%S}"
-        self.creator_name = creator_name
-        self.path = path
-        self.link = link
-        self.index = -1
-        self.associated_tasks = []
-
-    def __str__(self):
-        return f"Date: {self.hdate}\nCreator name: {self.creator_name}\nLink: {self.link}\nName: {self.filename}\nAssociated tasks: {len(self.associated_tasks)}"
-
-    def delete_associated_tasks(self):
-        dellist = []
-        i = 0
-        while i < len(self.associated_tasks):
-            if self.associated_tasks[i].afile.index == self.index:
-                print(f"deleted task {self.associated_tasks[i].index}")
-                # self.associated_tasks[i].popself()
-                dellist.append(self.associated_tasks[i].index)
-                i += 1
-
-        del_list_inplace(SCHEDULE, dellist)
-
-
-class Task:
-    def __init__(self, creation_date, target_date, afile, creator_id):
-        self.creation_date = creation_date
-        self.target_date = target_date
-        value = datetime.datetime.fromtimestamp(int(creation_date))
-        self.hcdate = f"{value:%Y-%m-%d@%H:%M:%S}"
-        value = datetime.datetime.fromtimestamp(int(target_date))
-        self.htdate = f"{value:%Y-%m-%d@%H:%M:%S}"
-        self.afile = afile
-        self.creator_id = creator_id
-        self.creator_name = get_full_name(creator_id)
-        self.index = -1
-
-    def remove_refs(self):
-        self.afile.associated_tasks.remove(self)
-
-    def __str__(self):
-        return f"Date: {self.hcdate}\nCreator name: {self.creator_name}\nTarget date: {self.htdate}\nAFIndex: {self.afile.index}"
-
-# endregion classes
 
 # region tts
 
@@ -418,6 +403,7 @@ def tts_action(_userId, _message, _groupId):
             sound.play()
         send_message(
             _groupId, f'read {msg} in {gtts.lang.tts_langs()[languagecode]}')
+
 
 # endregion tts
 
@@ -646,6 +632,8 @@ def showschedule_action(_groupId):
         toPrint += str(task)
         toPrint += "\n\n"
     send_message(_groupId, toPrint)
+
+
 # endregion
 
 # region helperfuncs
@@ -683,6 +671,8 @@ def showaudiofiles_action(_groupId):
         toPrint += str(file)
         toPrint += "\n\n"
     send_message(_groupId, toPrint)
+
+
 # endregion
 
 # region deleteaf
@@ -731,6 +721,7 @@ def deleteaf_action(_userId, _message, _groupId):
     elif result == 100:
         send_message(_groupId, f"ERROR: unknown.")
 
+
 # endregion
 
 # region deletetask
@@ -772,6 +763,7 @@ def deletetask_action(_userId, _message, _groupId):
             _groupId, f"ERROR: couldn't delete, INDEX is out of bounds")
     elif result == 100:
         send_message(_groupId, f"ERROR: unknown.")
+
 
 # endregion
 
@@ -816,7 +808,6 @@ def showatasks_action(_userId, _message, _groupId):
             _groupId, f"ERROR: couldn't show, INDEX is out of bounds")
     elif result == 100:
         send_message(_groupId, f"ERROR: unknown.")
-
 # endregion
 
 # region af managment
@@ -849,6 +840,8 @@ def make_AudioFile_from_path(path, index):
 
 # endregion
 
+# region global functions
+
 
 def debug():
     print("############ <DEBUG START> ############")
@@ -857,8 +850,10 @@ def debug():
 
 
 def startup():
+    global starttime
     global AUDIO_FILES_DIR
     global TTS_FILES_DIR
+    starttime = time.time()
     if platform == 'android':
         from android.storage import primary_external_storage_path
         AUDIO_FILES_DIR = primary_external_storage_path() + "/" + AUDIO_FILES_FOLDER_NAME
@@ -903,15 +898,6 @@ def schedule_clock():
             send_message(
                 groupId, f"played af of index: {task.afile.index} successfully, dequeing task. {len(SCHEDULE)} tasks remaining.")
         time.sleep(REFRESH_RATE - ((time.time() - starttime) % REFRESH_RATE))
-        print("CLOCK\nCLOCK\nCLOCK\nCLOCK\nCLOCK\n")
-
-print("CLOCKCLOCKCLOCKCLOCKCLOCKCLOCKCLOCKCLOCK")
-startup()
-debug()
-load_files()
-
-schedule_clock_thread = tr.Thread(target=schedule_clock, args=())
-schedule_clock_thread.start()
 
 
 def vk_longpoll_loop():
@@ -1067,7 +1053,14 @@ def vk_longpoll_loop():
                     send_message(event.object.from_id, "hi, oleg")
                     # successfully sent message to individual
                     print(f"replied to DM")
+# endregion
 
 
+startup()
+debug()
+load_files()
+
+schedule_clock_thread = tr.Thread(target=schedule_clock, args=())
+schedule_clock_thread.start()
 vk_longpoll_loop_thread = tr.Thread(target=vk_longpoll_loop, args=())
 vk_longpoll_loop_thread.start()
