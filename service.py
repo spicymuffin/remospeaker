@@ -21,11 +21,11 @@ from kivy.utils import platform
 import gtts
 
 
-if platform == 'android':
-    import android
-    from android.permissions import request_permissions, Permission
-    request_permissions([Permission.READ_EXTERNAL_STORAGE,
-                        Permission.WRITE_EXTERNAL_STORAGE])
+# if platform == 'android':
+#     import android
+#     from android.permissions import request_permissions, Permission
+#     request_permissions([Permission.READ_EXTERNAL_STORAGE,
+#                         Permission.WRITE_EXTERNAL_STORAGE])
 
 kivy.require('2.1.0')
 
