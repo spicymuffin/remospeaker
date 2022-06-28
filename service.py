@@ -193,6 +193,10 @@ def is_command(_message):
     else:
         return 1
 
+
+def log_error(_groupId, explanation):
+    send_message(_groupId, "ERROR: " + explanation)
+
 # endregion
 
 # region demote
@@ -313,12 +317,15 @@ def nuke_action(_sender, _groupId):
 
 
 def showadmin_action(_groupId):
+    if len(ADMIN_ID_LIST) == 0:
+        send_message(_groupId, "no admins to display.")
     toPrint = ""
     for adminId in ADMIN_ID_LIST:
         toPrint += get_name(str(adminId))
         toPrint += f"({adminId}); "
     toPrint = toPrint[0:-2]
     send_message(_groupId, toPrint)
+
 # endregion showadmin
 
 # region authandexecute
@@ -329,6 +336,8 @@ def authenticate_and_execute(_toAuthenticate, _toExecute, _parameters, _groupId)
         _toExecute(_parameters)
     else:
         send_message(_groupId, "ACCESS DENIED: not admin.")
+
+
 # endregion authandexecute
 
 # region quit
@@ -347,7 +356,7 @@ def quit_action(parameters):
 
 def format_message(msg):
     if len(msg) > 50:
-        return '"' + msg[:10] + "..." + '"'
+        return '"' + msg[:50] + "..." + '"'
     return '"' + msg + '"'
 
 
@@ -393,7 +402,7 @@ def tts_thread(_message, _groupId):
     languagecode = _message.split(" ")[1]
     msg = " ".join(_message.split(" ")[2:])
     send_message(
-        _groupId, f'started tts tread...\nmsg: {format_message(msg)}')
+        _groupId, f'started tts thread...\nmsg: {format_message(msg)}')
     try:
         if platform == 'android':
             from jnius import autoclass
@@ -425,9 +434,9 @@ def tts_thread(_message, _groupId):
             sound = SoundLoader.load(f'{TTS_FILES_DIR}/tts.mp3')
             sound.play()
 
-    except Exception as err:
-        send_message(_groupId, f'error while executing tts: {err}')
-        print(err)
+    except Exception as ex:
+        send_message(_groupId, f'error while executing tts: {ex}')
+        print(ex)
 
     send_message(
         _groupId, f'finished reading {format_message(msg)} in {gtts.lang.tts_langs()[languagecode]}')
@@ -486,7 +495,7 @@ def handle_schedulepb_request(_message):
             return 0  # success
         else:
             return 3  # audio file not present
-    except:
+    except Exception as ex:
         return 100  # unknown error
 
 
@@ -495,32 +504,27 @@ def schedulepb_action(_userId, _message, _groupId, _messageObject):
     result = handle_schedulepb_request(_message)
 
     if result == 1:
-        send_message(
-            _groupId, f"ERROR: couldn't complete request, parameter ID is invalid.")
+        log_error(_groupId, "parameter ID is invalid.")
         return  # abort if parameter is inivalid
 
     if result == 2:
-        send_message(
-            _groupId, f"ERROR: couldn't complete request, parameter DATE is invalid.")
+        log_error(_groupId, "parameter DATE is invalid.")
         return  # abort if parameter is inivalid
 
     if result == 3:
-        send_message(
-            _groupId, f"ERROR: couldn't schedule, INDEX out of bounds.")
+        log_error(_groupId, "INDEX out of bounds.")
         return  # abort if index abort if audio file index not present
 
     if result == 4:
-        send_message(
-            _groupId, f"ERROR: target date should be at least 5 secs away from now.")
+        log_error(_groupId, "target date should be at least 5 secs away from now.")
         return  # abort if date is too close
 
     if result == 5:
-        send_message(
-            _groupId, f"ERROR: invalid number of parameters")
+        log_error(_groupId, "invalid number of parameters")
         return  # abort if invalid number of parameters
 
     elif result == 100:
-        send_message(_groupId, f"ERROR: unknown.")
+        log_error(_groupId, "unknown.")
         return  # abort if unknown error
 
     index = int(_message.split(" ")[1])
@@ -712,6 +716,7 @@ def handle_deleteaf_request(_message):
         index = int(_message.split(" ")[1])
     except:
         return 1  # invalid index
+
     removeindex = -1
     for i in range(len(AUDIO_FILES_LIST)):
         if AUDIO_FILES_LIST[i].index == index:
@@ -720,34 +725,41 @@ def handle_deleteaf_request(_message):
 
     if removeindex == -1:
         return 2  # index not in aflist
+
     return 100  # unknown error
 
 
 def deleteaf_action(_userId, _message, _groupId):
+
     result = handle_deleteaf_request(_message)
+
     if result == 1:
-        send_message(
-            _groupId, f"ERROR: couldn't delete, parameter INDEX is invalid.")
+        log_error(_groupId, "couldn't delete, parameter INDEX is invalid.")
         return  # abort if parameter is inivalid
 
-    index = int(_message.split(" ")[1])
+    if result == 2:
+        log_error(_groupId, "couldn't delete, INDEX is out of bounds")
+        return  # abort if index out of bounds
 
+    if result == 100:
+        log_error(_groupId, "unknown.")
+        return  # abort if unknown error
+
+    index = int(_message.split(" ")[1])
     if result == 0:
         removeindex = -1
+
         for i in range(len(AUDIO_FILES_LIST)):
             if AUDIO_FILES_LIST[i].index == index:
                 removeindex = i
+
         af = AUDIO_FILES_LIST[removeindex]
         af.delete_associated_tasks()
         os.remove(af.path)
         AUDIO_FILES_LIST.pop(removeindex)
+        print(f"successfully deleted file of index {index}.")
         send_message(
             _groupId, f"successfully deleted file of index {index}.")
-    elif result == 2:
-        send_message(
-            _groupId, f"ERROR: couldn't delete, INDEX is out of bounds")
-    elif result == 100:
-        send_message(_groupId, f"ERROR: unknown.")
 
 
 # endregion
@@ -850,8 +862,13 @@ def make_AudioFile_from_path(path, index):
         "@", ":").replace("$", "/").replace("#", "?"), data[4][0:-4], path)
     af.index = index
     return af
+
+
 # endregion
 
+# region setvolume
+
+# endregion
 # endregion
 
 # region global functions
