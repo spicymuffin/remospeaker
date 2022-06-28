@@ -911,7 +911,6 @@ debug()
 load_files()
 
 schedule_clock_thread = tr.Thread(target=schedule_clock, args=())
-schedule_clock_thread.setDaemon(True)
 schedule_clock_thread.start()
 
 
@@ -1071,5 +1070,4 @@ def vk_longpoll_loop():
 
 
 vk_longpoll_loop_thread = tr.Thread(target=vk_longpoll_loop, args=())
-vk_longpoll_loop_thread.setDaemon(True)
 vk_longpoll_loop_thread.start()
