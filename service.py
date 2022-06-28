@@ -399,12 +399,11 @@ def tts_thread(_message, _groupId):
             from jnius import autoclass
             tts = gtts.gTTS(text=msg, lang=languagecode)
 
+            arr = os.listdir(TTS_FILES_DIR)
             path = f"{TTS_FILES_DIR}/tts{len(arr)}.ogg"
             print(path)
             tts.save(path)
             MediaPlayer = autoclass('android.media.MediaPlayer')
-
-            arr = os.listdir(TTS_FILES_DIR)
 
             # create our player
             mPlayer = MediaPlayer()
@@ -428,6 +427,7 @@ def tts_thread(_message, _groupId):
 
     except Exception as err:
         send_message(_groupId, f'error while executing tts: {err}')
+        print(err)
 
     send_message(
         _groupId, f'finished reading {format_message(msg)} in {gtts.lang.tts_langs()[languagecode]}')
