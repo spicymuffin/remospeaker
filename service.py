@@ -383,7 +383,7 @@ def tts_action(_userId, _message, _groupId):
         return  # abort if unknown error
 
     if result == 0:
-        tts_thread_instance = tr.Thread(target=tts_thread, args=())
+        tts_thread_instance = tr.Thread(target=tts_thread, args=(_message, _groupId))
         tts_thread_instance.setDaemon(True)
         tts_thread_instance.start()
 
