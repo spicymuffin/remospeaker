@@ -11,11 +11,13 @@ from kivy.utils import platform
 
 def start_service():
     from jnius import autoclass
-    service = autoclass("org.luigi.remospeaker.ServiceVKBOT")
-    mActivity = autoclass("org.kivy.android.PythonActivity").mActivity
-    service.start(mActivity, "")
+    from android import mActivity
+    context =  mActivity.getApplicationContext()
+    SERVICE_NAME = str(context.getPackageName()) + '.Service' + 'VKBOT'
+    service = autoclass(SERVICE_NAME)
+    print(SERVICE_NAME)
+    service.start(mActivity,'')
     return service
-
 
 class HistoryInput(BoxLayout):
     def collapse_row(self, app, lbl):
