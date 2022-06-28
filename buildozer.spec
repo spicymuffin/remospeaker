@@ -37,7 +37,9 @@ version = 0.1
 
 # (list) Application requirements
 # comma separated e.g. requirements = sqlite3,kivy
-requirements = python3,kivy,datetime,requests,vk_api,jnius,urllib3,chardet,idna,ffpyplayer,gtts,playsound
+requirements = python3,kivy,datetime,requests,vk_api,jnius,urllib3,chardet,idna,ffpyplayer,gtts
+#requirements = python3,kivy==2.0.0,kivymd==0.104.2,numpy,pillow,kivy_garden.mapview,requests,charset_normalizer,chardet,idna, urllib3,certifi,plyer==2.0.0,sqlite3,pickle-mixin,kivygradient,android
+#requirements = python3,kivy==2.0.0,kivymd==0.104.2,numpy,pillow,kivy_garden.mapview,requests,charset_normalizer,chardet,idna, urllib3,certifi,plyer==2.0.0,sqlite3,pickle-mixin,kivygradient,jnius,android
 
 # (str) Custom source folders for requirements
 # Sets custom source for any requirements with recipes
@@ -53,7 +55,7 @@ requirements = python3,kivy,datetime,requests,vk_api,jnius,urllib3,chardet,idna,
 orientation = portrait
 
 # (list) List of service to declare
-services = VKBOT:service.py
+services = ser:service.py
 
 #
 # OSX Specific
@@ -93,7 +95,7 @@ fullscreen = 0
 #icon.adaptive_background.filename = %(source.dir)s/data/icon_bg.png
 
 # (list) Permissions
-android.permissions = INTERNET, WRITE_EXTERNAL_STORAGE
+android.permissions = INTERNET, WRITE_EXTERNAL_STORAGE, READ_INTERNAL_STORAGE, FOREGROUND_SERVICE
 
 # (list) features (adds uses-feature -tags to manifest)
 #android.features = android.hardware.usb.host
@@ -249,7 +251,7 @@ android.permissions = INTERNET, WRITE_EXTERNAL_STORAGE
 #android.uses_library =
 
 # (str) Android logcat filters to use
-android.logcat_filters = *:S python:D
+#android.logcat_filters = *:S python:D
 
 # (bool) Android logcat only display log for activity's pid
 #android.logcat_pid_only = False

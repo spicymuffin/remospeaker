@@ -9,16 +9,6 @@ from kivy.core.audio import SoundLoader
 from kivy.utils import platform
 
 
-def start_service():
-    from jnius import autoclass
-    from android import mActivity
-    context =  mActivity.getApplicationContext()
-    SERVICE_NAME = str(context.getPackageName()) + '.Service' + 'VKBOT'
-    print(SERVICE_NAME)
-    service = autoclass(SERVICE_NAME)
-    service.start(mActivity,'')
-    return service
-
 class HistoryInput(BoxLayout):
     def collapse_row(self, app, lbl):
         if lbl.shorten:
@@ -74,7 +64,18 @@ class RemoSpeaker(BoxLayout):
 class RemoSpeakerApp(App):
     def on_start(self):
         if platform == 'android':
-            start_service()
+            self.start_service()
+            print('service started')
+
+    def start_service():
+        from jnius import autoclass
+        from android import mActivity
+        context = mActivity.getApplicationContext()
+        SERVICE_NAME = str(context.getPackageName()) + '.Service' + 'ser'
+        print(SERVICE_NAME)
+        service = autoclass(SERVICE_NAME)
+        service.start(mActivity, '')
+        return service
 
     def build(self):
         return RemoSpeaker()
