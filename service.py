@@ -346,7 +346,7 @@ def quit_action(parameters):
 
 
 def format_message(msg):
-    if len(msg) > 10:
+    if len(msg) > 50:
         return '"' + msg[:10] + "..." + '"'
     return '"' + msg + '"'
 
@@ -367,7 +367,7 @@ def handle_tts_request(_message):
 
 
 def tts_action(_userId, _message, _groupId):
-
+    global THREAD_LIST
     result = handle_tts_request(_message)
 
     if result == 1:
@@ -383,13 +383,13 @@ def tts_action(_userId, _message, _groupId):
         return  # abort if unknown error
 
     if result == 0:
-        tts_thread_instance = tr.Thread(target=tts_thread, args=(_message, _groupId))
+        tts_thread_instance = tr.Thread(
+            target=tts_thread, args=(_message, _groupId))
         tts_thread_instance.setDaemon(True)
         tts_thread_instance.start()
 
 
 def tts_thread(_message, _groupId):
-    global THREAD_LIST
     languagecode = _message.split(" ")[1]
     msg = " ".join(_message.split(" ")[2:])
     send_message(
@@ -398,27 +398,36 @@ def tts_thread(_message, _groupId):
         if platform == 'android':
             from jnius import autoclass
             tts = gtts.gTTS(text=msg, lang=languagecode)
-            print(f'{TTS_FILES_DIR}/tts.ogg')
-            tts.save(f'{TTS_FILES_DIR}/tts.ogg')
+
+            path = f"{TTS_FILES_DIR}/tts{len(arr)}.ogg"
+            print(path)
+            tts.save(path)
             MediaPlayer = autoclass('android.media.MediaPlayer')
+
+            arr = os.listdir(TTS_FILES_DIR)
 
             # create our player
             mPlayer = MediaPlayer()
-            mPlayer.setDataSource(f'{TTS_FILES_DIR}/tts.ogg')
+            mPlayer.setDataSource(path)
             mPlayer.prepare()
 
             # play
-            print('duration:', mPlayer.getDuration())
             mPlayer.start()
+            print('duration:', mPlayer.getDuration())
             print('current position:', mPlayer.getCurrentPosition())
+
+            time.sleep(mPlayer.getDuration()/1000 + 1)
+
+            os.remove(path)
         else:
             tts = gtts.gTTS(text=msg, lang=languagecode)
             print(f'{TTS_FILES_DIR}/tts.mp3')
             tts.save(f'{TTS_FILES_DIR}/tts.mp3')
             sound = SoundLoader.load(f'{TTS_FILES_DIR}/tts.mp3')
             sound.play()
+
     except Exception as err:
-        send_message(_groupId, f'error while executing tts code: {err}')
+        send_message(_groupId, f'error while executing tts: {err}')
 
     send_message(
         _groupId, f'finished reading {format_message(msg)} in {gtts.lang.tts_langs()[languagecode]}')
@@ -832,20 +841,6 @@ def showatasks_action(_userId, _message, _groupId):
 # region af managment
 
 
-def load_files():
-    arr = os.listdir(AUDIO_FILES_DIR)
-    i = 0
-    for entry in arr:
-        AUDIO_FILES_LIST.append(make_AudioFile_from_path(
-            f"{AUDIO_FILES_DIR}/{entry}", i))
-        i += 1
-
-    print("loaded files")
-    # update_indexes_afl()
-    for file in AUDIO_FILES_LIST:
-        print(file)
-
-
 def make_AudioFile_from_path(path, index):
     #path = AUDIO_FILES_DIR + '/' + path
     name = path.split("/")[-1]
@@ -860,6 +855,17 @@ def make_AudioFile_from_path(path, index):
 # endregion
 
 # region global functions
+
+
+def load_files():
+    arr = os.listdir(AUDIO_FILES_DIR)
+    i = 0
+    for entry in arr:
+        AUDIO_FILES_LIST.append(make_AudioFile_from_path(
+            f"{AUDIO_FILES_DIR}/{entry}", i))
+        i += 1
+
+    print(f"loaded {len(arr)} files")
 
 
 def debug():
