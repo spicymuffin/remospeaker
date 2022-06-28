@@ -67,7 +67,7 @@ class RemoSpeakerApp(App):
             self.start_service()
             print('service started')
 
-    def start_service():
+    def start_service(self):
         from jnius import autoclass
         from android import mActivity
         context = mActivity.getApplicationContext()
