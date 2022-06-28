@@ -50,6 +50,7 @@ PHOTOS = ["photo-199164285_457239021", "photo-199164285_457239019",
 ADMIN_ID_LIST = [CREATOR_ID]
 AUDIO_FILES_LIST = []
 SCHEDULE = []
+THREAD_LIST = []
 # endregion
 # region time management
 starttime = None
@@ -344,6 +345,12 @@ def quit_action(parameters):
 # region tts
 
 
+def format_message(msg):
+    if len(msg) > 10:
+        return '"' + msg[:10] + "..." + '"'
+    return '"' + msg + '"'
+
+
 def handle_tts_request(_message):
     try:
         splt = _message.split(" ")
@@ -376,11 +383,20 @@ def tts_action(_userId, _message, _groupId):
         return  # abort if unknown error
 
     if result == 0:
-        languagecode = _message.split(" ")[1]
-        msg = " ".join(_message.split(" ")[2:])
+        tts_thread_instance = tr.Thread(target=tts_thread, args=())
+        tts_thread_instance.setDaemon(True)
+        tts_thread_instance.start()
+
+
+def tts_thread(_message, _groupId):
+    global THREAD_LIST
+    languagecode = _message.split(" ")[1]
+    msg = " ".join(_message.split(" ")[2:])
+    send_message(
+        _groupId, f'started tts tread...\nmsg: {format_message(msg)}')
+    try:
         if platform == 'android':
             from jnius import autoclass
-
             tts = gtts.gTTS(text=msg, lang=languagecode)
             print(f'{TTS_FILES_DIR}/tts.ogg')
             tts.save(f'{TTS_FILES_DIR}/tts.ogg')
@@ -401,8 +417,11 @@ def tts_action(_userId, _message, _groupId):
             tts.save(f'{TTS_FILES_DIR}/tts.mp3')
             sound = SoundLoader.load(f'{TTS_FILES_DIR}/tts.mp3')
             sound.play()
-        send_message(
-            _groupId, f'read {msg} in {gtts.lang.tts_langs()[languagecode]}')
+    except Exception as err:
+        send_message(_groupId, f'error while executing tts code: {err}')
+
+    send_message(
+        _groupId, f'finished reading {format_message(msg)} in {gtts.lang.tts_langs()[languagecode]}')
 
 
 # endregion tts
@@ -1053,6 +1072,8 @@ def vk_longpoll_loop():
                     send_message(event.object.from_id, "hi, oleg")
                     # successfully sent message to individual
                     print(f"replied to DM")
+
+
 # endregion
 
 
