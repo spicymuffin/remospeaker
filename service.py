@@ -118,7 +118,7 @@ AUDIO_FILES_LIST = []
 SCHEDULE = []
 
 starttime = time.time()
-REFRESH_RATE = 0.1
+REFRESH_RATE = 1
 
 groupId = None
 
@@ -850,25 +850,6 @@ def make_AudioFile_from_path(path, index):
 # endregion
 
 
-def schedule_clock():
-    global SCHEDULE
-    while True:
-        while len(SCHEDULE) > 0 and SCHEDULE[0].target_date <= datetime.datetime.now().timestamp():
-            # while len(SCHEDULE) != 0:
-            task = SCHEDULE.pop(0)
-            print(task.afile.path)
-            if platform == 'android':
-                sound = MusicPlayerAndroid()
-                sound.load(task.afile.path)
-                sound.play()
-            else:
-                sound = SoundLoader.load(task.afile.path)
-                sound.play()
-            send_message(
-                groupId, f"played af of index: {task.afile.index} successfully, dequeing task. {len(SCHEDULE)} tasks remaining.")
-        time.sleep(REFRESH_RATE - ((time.time() - starttime) % REFRESH_RATE))
-        print("CLOCK\nCLOCK\nCLOCK\nCLOCK\nCLOCK\n")
-
 def debug():
     print("############ <DEBUG START> ############")
     print(os.path.dirname(__file__))
@@ -905,6 +886,26 @@ def startup():
             print("Made tts files directory")
 
 
+def schedule_clock():
+    global SCHEDULE
+    while True:
+        while len(SCHEDULE) > 0 and SCHEDULE[0].target_date <= datetime.datetime.now().timestamp():
+            # while len(SCHEDULE) != 0:
+            task = SCHEDULE.pop(0)
+            print(task.afile.path)
+            if platform == 'android':
+                sound = MusicPlayerAndroid()
+                sound.load(task.afile.path)
+                sound.play()
+            else:
+                sound = SoundLoader.load(task.afile.path)
+                sound.play()
+            send_message(
+                groupId, f"played af of index: {task.afile.index} successfully, dequeing task. {len(SCHEDULE)} tasks remaining.")
+        time.sleep(REFRESH_RATE - ((time.time() - starttime) % REFRESH_RATE))
+        print("CLOCK\nCLOCK\nCLOCK\nCLOCK\nCLOCK\n")
+
+print("CLOCK\nCLOCK\nCLOCK\nCLOCK\nCLOCK\n")
 startup()
 debug()
 load_files()
