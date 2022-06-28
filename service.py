@@ -34,6 +34,7 @@ __version__ = '0.1'
 # audio wizardry for android?????
 os.environ["KIVY_AUDIO"] = "avplayer"
 
+
 class MusicPlayerAndroid(object):
     def __init__(self):
         from jnius import autoclass
@@ -122,6 +123,8 @@ REFRESH_RATE = 1
 groupId = None
 
 
+# region funcitons
+
 # region interal functions
 
 
@@ -154,8 +157,6 @@ def is_command(_message):
         return 1
 
 # endregion
-
-# region funcitons
 
 # region demote
 
@@ -868,11 +869,6 @@ def schedule_clock():
         time.sleep(REFRESH_RATE - ((time.time() - starttime) % REFRESH_RATE))
 
 
-schedule_clock_thread = tr.Thread(target=schedule_clock, args=())
-schedule_clock_thread.setDaemon(True)
-schedule_clock_thread.start()
-
-
 def debug():
     print("############ <DEBUG START> ############")
     print(os.path.dirname(__file__))
@@ -908,9 +904,15 @@ def startup():
             os.makedirs(TTS_FILES_DIR)
             print("Made tts files directory")
 
+
 startup()
 debug()
 load_files()
+
+schedule_clock_thread = tr.Thread(target=schedule_clock, args=())
+schedule_clock_thread.setDaemon(True)
+schedule_clock_thread.start()
+
 
 def vk_longpoll_loop():
     global groupId
