@@ -118,7 +118,7 @@ AUDIO_FILES_LIST = []
 SCHEDULE = []
 
 starttime = time.time()
-REFRESH_RATE = 1
+REFRESH_RATE = 0.1
 
 groupId = None
 
@@ -867,7 +867,7 @@ def schedule_clock():
             send_message(
                 groupId, f"played af of index: {task.afile.index} successfully, dequeing task. {len(SCHEDULE)} tasks remaining.")
         time.sleep(REFRESH_RATE - ((time.time() - starttime) % REFRESH_RATE))
-
+        print("CLOCK\nCLOCK\nCLOCK\nCLOCK\nCLOCK\n")
 
 def debug():
     print("############ <DEBUG START> ############")
