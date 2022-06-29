@@ -4,6 +4,7 @@ from kivy.app import App
 from kivy.uix.screenmanager import ScreenManager, Screen
 from kivy.uix.widget import Widget
 from jnius import autoclass
+from kivy import BoxLayout
 import time
 
 PythonService = autoclass('org.kivy.android.PythonService')
@@ -11,7 +12,7 @@ PythonService = autoclass('org.kivy.android.PythonService')
 print(type(PythonService.mService))
 
 
-class RemoSpeaker():
+class RemoSpeaker(BoxLayout):
     pass
 
 
