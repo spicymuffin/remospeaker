@@ -911,7 +911,7 @@ def setvolume_action(_userId, _message, _groupId):
     if result == 0:
         from jnius import autoclass
         Context = autoclass('android.content.Context')
-        AudioManager = autoclass('aandroid.media.AudioManager')
+        AudioManager = autoclass('android.media.AudioManager')
         PythonActivity = autoclass('org.renpy.android.PythonActivity')
         activity = PythonActivity.mActivity
 
