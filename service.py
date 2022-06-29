@@ -6,20 +6,14 @@ import time
 import requests
 import vk_api
 import random
-import sys
 from vk_api.bot_longpoll import VkBotLongPoll, VkBotEventType
-from kivy.uix.widget import Widget
-from kivy.uix.boxlayout import BoxLayout
-from kivy.properties import ObjectProperty
-from kivy.clock import Clock
-from kivy.app import App
 import kivy
 from kivy.core.audio import SoundLoader
 from kivy.utils import platform
 import gtts
 
 kivy.require('2.1.0')
-__version__ = '0.1'
+__version__ = '1.1'
 
 # region API initialization
 vk = vk_api.VkApi(
@@ -197,6 +191,10 @@ def is_command(_message):
 def log_error(_groupId, explanation):
     send_message(_groupId, "ERROR: " + explanation)
 
+
+def log_access_denied(_groupId):
+    send_message(_groupId, "ACCESS DENIED. are you admin?")
+
 # endregion
 
 # region demote
@@ -204,19 +202,21 @@ def log_error(_groupId, explanation):
 
 def handle_demote_request(_message):
     try:
-        demoteId = int(_message.split(" ")[1])
-    except:
-        return 1  # invalid id
-    if not check_id(demoteId):
-        return 1  # invalid id
-    elif demoteId not in ADMIN_ID_LIST:
-        return 2  # admin id isnt in admin id list
-    elif demoteId == CREATOR_ID:
-        return 3  # cant demote creator
-    elif demoteId in ADMIN_ID_LIST:
-        return 0  # success
-    else:
-        return 100  # unknown error
+        try:
+            demoteId = int(_message.split(" ")[1])
+        except:
+            return 1  # invalid id
+        if not check_id(demoteId):
+            return 1  # invalid id
+        if demoteId not in ADMIN_ID_LIST:
+            return 2  # admin id isnt in admin id list
+        if demoteId == CREATOR_ID:
+            return 3  # cant demote creator
+        if demoteId in ADMIN_ID_LIST:
+            return 0  # success
+    except Exception as ex:
+        return ex  # unknown error
+    return 100  # unknown error
 
 
 def demote_action(parameters):
@@ -226,42 +226,55 @@ def demote_action(parameters):
 
     result = handle_demote_request(_message)
 
+    if isinstance(result, Exception):
+        log_error(_groupId, str(result))
+        return  # abort if unknown error
+
     if result == 1:
-        send_message(
-            _groupId, f"ERROR: couldn't demote, parameter ID is invalid.")
+        log_error(_groupId, f"couldn't demote, parameter ID is invalid.")
         return  # abort if parameter is inivalid
+
+    if result == 2:
+        log_error(
+            _groupId, f"couldn't demote {get_name(demoteId)}, ADMIN_ID_LIST doesn't contain {get_name(demoteId)}.")
+        return  # abort if ADMIN_ID_LIST doesn't contain id
+
+    if result == 3:
+        log_error(
+            _groupId, f"couldn't demote {get_name(demoteId)}, CREATOR can't be demoted.")
+        return  # abort if CREATOR
+
+    if result == 100:
+        log_error(_groupId, f"unknown.")
+        return  # abort if unknown error
 
     demoteId = int(_message.split(" ")[1])
 
     if result == 0:
         ADMIN_ID_LIST.remove(demoteId)
         send_message(_groupId, f"demoted {get_name(demoteId)} successfully.")
-    elif result == 2:
-        send_message(
-            _groupId, f"ERROR: couldn't demote {get_name(demoteId)}, ADMIN_ID_LIST doesn't contain {get_name(demoteId)}.")
-    elif result == 3:
-        send_message(
-            _groupId, f"ERROR: couldn't demote {get_name(demoteId)}, CREATOR can't be demoted.")
-    elif result == 100:
-        send_message(_groupId, f"ERROR: unknown.")
-# endregion demote
+
+
+# endregion
 
 # region promote
 
 
 def handle_promote_request(_message):
     try:
-        promoteId = int(_message.split(" ")[1])
-    except:
-        return 1  # invalid id
-    if not check_id(promoteId):
-        return 1  # invalid id
-    elif promoteId in ADMIN_ID_LIST:
-        return 2  # admin id list already contains this id
-    elif promoteId not in ADMIN_ID_LIST:
-        return 0  # success
-    else:
-        return 100  # unknown error
+        try:
+            promoteId = int(_message.split(" ")[1])
+        except:
+            return 1  # invalid id
+        if not check_id(promoteId):
+            return 1  # invalid id
+        elif promoteId in ADMIN_ID_LIST:
+            return 2  # admin id list already contains this id
+        elif promoteId not in ADMIN_ID_LIST:
+            return 0  # success
+    except Exception as ex:
+        return ex  # unknown error
+    return 100  # unknown error
 
 
 def promote_action(parameters):
@@ -271,47 +284,69 @@ def promote_action(parameters):
 
     result = handle_promote_request(_message)
 
+    if isinstance(result, Exception):
+        log_error(_groupId, str(result))
+        return  # abort if unknown error
+
     if result == 1:
-        send_message(
-            _groupId, f"ERROR: couldn't demote, parameter ID is invalid.")
+        log_error(_groupId, "couldn't demote, parameter ID is invalid.")
         return  # abort if parameter is inivalid
+
+    if result == 2:
+        log_error(
+            _groupId, f"couldn't promote {get_name(promoteId)}, ADMIN_ID_LIST already contains {get_name(promoteId)}.")
+        return  # abort if ADMIN_ID_LIST already contains id
+
+    if result == 100:
+        log_error(_groupId, "unknown.")
+        return  # abort if unknown error
 
     promoteId = int(_message.split(" ")[1])
 
     if result == 0:
         ADMIN_ID_LIST.append(promoteId)
         send_message(_groupId, f"promoted {get_name(promoteId)} successfully.")
-    elif result == 2:
-        send_message(
-            _groupId, f"ERROR: couldn't promote {get_name(promoteId)}, ADMIN_ID_LIST already contains {get_name(promoteId)}.")
-    elif result == 100:
-        send_message(_groupId, f"ERROR: unknown.")
-# endregion promote
+
+
+# endregion
 
 # region nuke
 
 
 def handle_nuke_request(_requester):
-    if _requester != CREATOR_ID:
-        return 1  # requester isnt creator
-    elif _requester == CREATOR_ID:
-        return 0  # success
-    else:
-        return 100  # unknown error
+    try:
+        if _requester != CREATOR_ID:
+            return 1  # requester isnt creator
+        if _requester == CREATOR_ID:
+            return 0  # success
+    except Exception as ex:
+        return ex  # unknown error
+    return 100  # unknown error
 
 
 def nuke_action(_sender, _groupId):
     global ADMIN_ID_LIST
+
     result = handle_nuke_request(_sender)
+
+    if isinstance(result, Exception):
+        log_error(_groupId, str(result))
+        return  # abort if unknown error
+
+    if result == 1:
+        log_access_denied(_groupId)
+        return  # abort if access denied
+
+    if result == 100:
+        log_error(_groupId, "unknown.")
+        return  # abort if unknown error
+
     if result == 0:
         ADMIN_ID_LIST = [CREATOR_ID]
-        send_message(_groupId, f"Nuked successfully")
-    elif result == 1:
-        send_message(
-            _groupId, f"ACCESS DENIED: nuke is a CREATOR only command.")
-    elif result == 100:
-        send_message(_groupId, f"ERROR: unknown.")
-# endregion nuke
+        send_message(_groupId, f"nuked successfully")
+
+
+# endregion
 
 # region showadmin
 
@@ -326,7 +361,7 @@ def showadmin_action(_groupId):
     toPrint = toPrint[0:-2]
     send_message(_groupId, toPrint)
 
-# endregion showadmin
+# endregion
 
 # region authandexecute
 
@@ -340,7 +375,7 @@ def authenticate_and_execute(_toAuthenticate, _toExecute, _parameters, _groupId)
 
 # endregion authandexecute
 
-# region quit
+# region quit #TODO: error handling
 
 
 def quit_action(parameters):
@@ -355,8 +390,8 @@ def quit_action(parameters):
 
 
 def format_message(msg):
-    if len(msg) > 50:
-        return '"' + msg[:50] + "..." + '"'
+    if len(msg) > 30:
+        return '"' + msg[:30] + "..." + '"'
     return '"' + msg + '"'
 
 
@@ -371,24 +406,28 @@ def handle_tts_request(_message):
 
         return 0  # success
     except Exception as ex:
-        print(ex)
-        return 100  # unknown error
+        return ex
+    return 100  # unknown error
 
 
 def tts_action(_userId, _message, _groupId):
     global THREAD_LIST
     result = handle_tts_request(_message)
 
+    if isinstance(result, Exception):
+        log_error(_groupId, str(result))
+        return  # abort if unknown error
+
     if result == 1:
-        send_message(_groupId, f"ERROR: invalid language code")
+        log_error(_groupId, f"invalid language code")
         return  # abort if invalid langage code
 
     if result == 5:
-        send_message(_groupId, f"ERROR: invalid parameter count")
+        log_error(_groupId, f"invalid parameter count")
         return  # abort if invalid parameter count
 
     if result == 100:
-        send_message(_groupId, f"ERROR: unknown.")
+        log_error(_groupId, f"unknown.")
         return  # abort if unknown error
 
     if result == 0:
@@ -402,7 +441,7 @@ def tts_thread(_message, _groupId):
     languagecode = _message.split(" ")[1]
     msg = " ".join(_message.split(" ")[2:])
     send_message(
-        _groupId, f'started tts thread...\nmsg: {format_message(msg)}')
+        _groupId, f'started tts thread, processing...\nmsg: {format_message(msg)}')
     try:
         if platform == 'android':
             from jnius import autoclass
@@ -410,7 +449,6 @@ def tts_thread(_message, _groupId):
 
             arr = os.listdir(TTS_FILES_DIR)
             path = f"{TTS_FILES_DIR}/tts{len(arr)}.ogg"
-            print(path)
             tts.save(path)
             MediaPlayer = autoclass('android.media.MediaPlayer')
 
@@ -418,7 +456,8 @@ def tts_thread(_message, _groupId):
             mPlayer = MediaPlayer()
             mPlayer.setDataSource(path)
             mPlayer.prepare()
-
+            send_message(
+                _groupId, f'file generated. reading...\nmsg: {format_message(msg)}')
             # play
             mPlayer.start()
             print('duration:', mPlayer.getDuration())
@@ -496,12 +535,17 @@ def handle_schedulepb_request(_message):
         else:
             return 3  # audio file not present
     except Exception as ex:
-        return 100  # unknown error
+        return ex  # unknown error
+    return 100
 
 
 def schedulepb_action(_userId, _message, _groupId, _messageObject):
 
     result = handle_schedulepb_request(_message)
+
+    if isinstance(result, Exception):
+        log_error(_groupId, str(result))
+        return
 
     if result == 1:
         log_error(_groupId, "parameter ID is invalid.")
@@ -581,41 +625,41 @@ def handle_schedulepbt_request(_message):
             return 0  # success
         else:
             return 4  # index not present
-    except:
-        return 100  # unknown error
+    except Exception as ex:
+        return ex  # unknown error
+    return 0  # unknown error
 
 
 def schedulepbt_action(_userId, _message, _groupId, _messageObject):
 
     result = handle_schedulepbt_request(_message)
 
+    if isinstance(result, Exception):
+        log_error(_groupId, str(result))
+        return  # abort if unknown error
+
     if result == 1:
-        send_message(
-            _groupId, f"ERROR: parameter ID is invalid.")
+        log_error(_groupId, "arameter ID is invalid.")
         return  # abort if parameter is inivalid
 
     if result == 2:
-        send_message(
-            _groupId, f"ERROR: incorrect metrics.")
+        log_error(_groupId, "incorrect metrics.")
         return  # abort if parameter is inivalid
 
     if result == 3:
-        send_message(
-            _groupId, f"ERROR: delta not an integer.")
+        log_error(_groupId, "delta not an integer.")
         return  # abort if parameter is inivalid
 
     if result == 4:
-        send_message(
-            _groupId, f"ERROR: audio file index not present")
+        log_error(_groupId, "audio file index not present")
         return  # abort if audio file index not present
 
     if result == 5:
-        send_message(
-            _groupId, f"ERROR: invalid number of parameters")
+        log_error(_groupId, "invalid number of parameters")
         return  # abort if invalid number of parameters
 
     if result == 100:
-        send_message(_groupId, f"ERROR: unknown.")
+        log_error(_groupId, "unknown.")
         return  # abort if unknown error
 
     mul = 0
@@ -711,27 +755,33 @@ def showaudiofiles_action(_groupId):
 
 
 def handle_deleteaf_request(_message):
-    index = -1
     try:
-        index = int(_message.split(" ")[1])
-    except:
-        return 1  # invalid index
+        index = -1
+        try:
+            index = int(_message.split(" ")[1])
+        except:
+            return 1  # invalid index
 
-    removeindex = -1
-    for i in range(len(AUDIO_FILES_LIST)):
-        if AUDIO_FILES_LIST[i].index == index:
-            removeindex = i
-            return 0
+        removeindex = -1
+        for i in range(len(AUDIO_FILES_LIST)):
+            if AUDIO_FILES_LIST[i].index == index:
+                removeindex = i
+                return 0
 
-    if removeindex == -1:
-        return 2  # index not in aflist
-
+        if removeindex == -1:
+            return 2  # index not in aflist
+    except Exception as ex:
+        return ex  # unknown error
     return 100  # unknown error
 
 
 def deleteaf_action(_userId, _message, _groupId):
 
     result = handle_deleteaf_request(_message)
+
+    if isinstance(result, Exception):
+        log_error(_groupId, str(result))
+        return  # abort if unknown error
 
     if result == 1:
         log_error(_groupId, "couldn't delete, parameter INDEX is invalid.")
@@ -746,6 +796,7 @@ def deleteaf_action(_userId, _message, _groupId):
         return  # abort if unknown error
 
     index = int(_message.split(" ")[1])
+
     if result == 0:
         removeindex = -1
 
@@ -757,6 +808,7 @@ def deleteaf_action(_userId, _message, _groupId):
         af.delete_associated_tasks()
         os.remove(af.path)
         AUDIO_FILES_LIST.pop(removeindex)
+
         print(f"successfully deleted file of index {index}.")
         send_message(
             _groupId, f"successfully deleted file of index {index}.")
@@ -768,27 +820,40 @@ def deleteaf_action(_userId, _message, _groupId):
 
 
 def handle_deletetask_request(_message):
-    index = -1
     try:
-        index = int(_message.split(" ")[1])
-    except:
-        return 1  # invalid index
-    if len(SCHEDULE) <= index:
-        return 2  # invalid index
-    elif len(SCHEDULE) > index:
-        return 0  # success
-    else:
-        return 100  # unknown error
+        index = -1
+        try:
+            index = int(_message.split(" ")[1])
+        except:
+            return 1  # invalid index
+        if len(SCHEDULE) <= index:
+            return 2  # invalid index
+        if len(SCHEDULE) > index:
+            return 0  # success
+    except Exception as ex:
+        return ex
+    return 100  # unknown error
 
 
 def deletetask_action(_userId, _message, _groupId):
 
     result = handle_deletetask_request(_message)
 
+    if isinstance(result, Exception):
+        log_error(_groupId, str(result))
+        return  # abort if unknown error
+
     if result == 1:
-        send_message(
-            _groupId, f"ERROR: couldn't delete, parameter INDEX is invalid.")
+        log_error(_groupId, "couldn't delete, parameter INDEX is invalid.")
         return  # abort if parameter is inivalid
+
+    if result == 2:
+        log_error(_groupId, "couldn't delete, INDEX is out of bounds")
+        return  # abort if index out of bounds
+
+    if result == 100:
+        log_error(_groupId, "unknown.")
+        return  # abort if unknown error
 
     index = int(_message.split(" ")[1])
 
@@ -798,56 +863,8 @@ def deletetask_action(_userId, _message, _groupId):
         SCHEDULE.pop(index)
         update_indexes_sdl()
         send_message(_groupId, f"successfully deleted task of index {index}.")
-    elif result == 2:
-        send_message(
-            _groupId, f"ERROR: couldn't delete, INDEX is out of bounds")
-    elif result == 100:
-        send_message(_groupId, f"ERROR: unknown.")
 
 
-# endregion
-
-# region showatasks
-
-
-def handle_showatasks_request(_message):
-    index = -1
-    try:
-        index = int(_message.split(" ")[1])
-    except:
-        return 1  # invalid index
-    if len(AUDIO_FILES_LIST) <= index:
-        return 2  # invalid index
-    elif len(AUDIO_FILES_LIST) > index:
-        return 0  # success
-    else:
-        return 100  # unknown error
-
-
-def showatasks_action(_userId, _message, _groupId):
-
-    result = handle_showatasks_request(_message)
-
-    if result == 1:
-        send_message(
-            _groupId, f"ERROR: couldn't show, parameter INDEX is invalid.")
-        return  # abort if parameter is inivalid
-
-    index = int(_message.split(" ")[1])
-
-    if result == 0:
-        if len(AUDIO_FILES_LIST[index].associated_tasks) == 0:
-            send_message(_groupId, "no tasks to display.")
-            return
-        toPrint = f"Task associated with audiofile no. {index}:\n"
-        for key in AUDIO_FILES_LIST[index].associated_tasks:
-            toPrint += f" INDEX: {key}\n"
-        send_message(_groupId, toPrint)
-    elif result == 2:
-        send_message(
-            _groupId, f"ERROR: couldn't show, INDEX is out of bounds")
-    elif result == 100:
-        send_message(_groupId, f"ERROR: unknown.")
 # endregion
 
 # region af managment
@@ -869,9 +886,10 @@ def make_AudioFile_from_path(path, index):
 # region setvolume
 
 # endregion
+
 # endregion
 
-# region global functions
+# region main functions
 
 
 def load_files():
@@ -883,12 +901,6 @@ def load_files():
         i += 1
 
     print(f"loaded {len(arr)} files")
-
-
-def debug():
-    print("############ <DEBUG START> ############")
-    print(os.path.dirname(__file__))
-    print("############ <DEBUG END> ############")
 
 
 def startup():
@@ -996,6 +1008,7 @@ def vk_longpoll_loop():
                     elif '!showadmin' in messageText.lower():
                         showadmin_action(groupId)
 
+                    # region spaghetti code, open at own risk
                     # write to directory
                     elif event.object["attachments"] != []:
                         attachments = event.object["attachments"]
@@ -1009,24 +1022,29 @@ def vk_longpoll_loop():
                                 r.content)  # date;owner_id;owner_name;link_mp3
                             print("Wrote audio file")
 
+                            af = None
+
                             fl = False
                             if len(AUDIO_FILES_LIST) > 0:
                                 if AUDIO_FILES_LIST[0].index != 0:
-                                    AUDIO_FILES_LIST.insert(0, make_AudioFile_from_path(
-                                        f'{AUDIO_FILES_DIR}/{localname}', 0))
+                                    af = make_AudioFile_from_path(
+                                        f'{AUDIO_FILES_DIR}/{localname}', 0)
+                                    AUDIO_FILES_LIST.insert(0, af)
                                     fl = True
                                 else:
                                     for i in range(len(AUDIO_FILES_LIST) - 1):
                                         if AUDIO_FILES_LIST[i+1].index - AUDIO_FILES_LIST[i].index != 1:
-                                            AUDIO_FILES_LIST.insert(i+1, make_AudioFile_from_path(
-                                                f'{AUDIO_FILES_DIR}/{localname}', i+1))
+                                            af = make_AudioFile_from_path(
+                                                f'{AUDIO_FILES_DIR}/{localname}', i+1)
+                                            AUDIO_FILES_LIST.insert(i+1, af)
                                             fl = True
                                             break
                             if fl == False:
-                                AUDIO_FILES_LIST.append(make_AudioFile_from_path(
-                                    f'{AUDIO_FILES_DIR}/{localname}', len(AUDIO_FILES_LIST)))
+                                af = make_AudioFile_from_path(
+                                    f'{AUDIO_FILES_DIR}/{localname}', len(AUDIO_FILES_LIST))
+                                AUDIO_FILES_LIST.append(af)
                             send_message(
-                                groupId, f"Got audio message. Wrote to storage. localname: {localname}")
+                                groupId, f"Got audio message. Wrote to storage, index: {af.index}")
                         # elif attachments[0]["type"] == "audio":
                         #     audio = attachments[0]["audio"]
                         #     if len(audio["url"]) > 0:
@@ -1046,14 +1064,11 @@ def vk_longpoll_loop():
                         #         print("Failed to get audio track, no link embedded.")
                         #         send_message(
                         #             groupId, "Failed to get audio track, no link embedded.")
+                    # endregion
 
                     # showaudiofiles
                     elif '!showaudiofiles' in messageText.lower() or '!showaf' in messageText.lower() or '!saf' in messageText.lower():
                         showaudiofiles_action(groupId)
-
-                    # showatasks
-                    elif '!showatasks' in messageText.lower():
-                        showatasks_action(userId, messageText, groupId)
 
                     # scheduleplaybacktimer
                     elif '!scheduleplaybacktimer' in messageText.lower() or '!spbt' in messageText.lower():
@@ -1099,9 +1114,8 @@ def vk_longpoll_loop():
 
 # endregion
 
-
+print("############### <log start> ###############")
 startup()
-debug()
 load_files()
 
 schedule_clock_thread = tr.Thread(target=schedule_clock, args=())
