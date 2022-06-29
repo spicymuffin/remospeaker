@@ -9,6 +9,8 @@ import time
 PythonService = autoclass('org.kivy.android.PythonService')
 PythonService.mService.setAutoRestartService(True)
 
+print(type(PythonService.mService))
+
 while True:
     print('this is my service and its running')
     time.sleep(1)
