@@ -11,7 +11,7 @@ PythonService = autoclass('org.kivy.android.PythonService')
 print(type(PythonService.mService))
 
 
-class RemoSpeaker(BoxLayout):
+class RemoSpeaker():
     pass
 
 
