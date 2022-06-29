@@ -5,10 +5,9 @@ from kivy.clock import Clock
 from kivy.app import App
 from jnius import autoclass
 
-from android import mActivity
-context = mActivity.getApplicationContext()
-service = autoclass('{}.Service{}'.format(context.getPackageName(), "Worker")).mService
-#PythonService.mService.setAutoRestartService(True)
+PythonService = autoclass('org.kivy.android.PythonService')
+service = PythonService.mService
+print(type(PythonService))
 print(type(service))
 PythonActivity = autoclass('org.kivy.android.PythonActivity')
 print(type(PythonActivity.mActivity))
