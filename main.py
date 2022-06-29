@@ -1,12 +1,17 @@
-from kivy.logger import Logger
-from vk_api.bot_longpoll import VkBotLongPoll, VkBotEventType
-from kivy.uix.widget import Widget
+
 from kivy.uix.boxlayout import BoxLayout
 from kivy.properties import ObjectProperty
 from kivy.clock import Clock
+
+import kivy
 from kivy.app import App
-from kivy.core.audio import SoundLoader
-from kivy.utils import platform
+from kivy.uix.screenmanager import ScreenManager, Screen
+from kivy.uix.widget import Widget
+from jnius import autoclass
+
+PythonService = autoclass('org.kivy.android.PythonService')
+#PythonService.mService.setAutoRestartService(True)
+print(type(PythonService.mService))
 
 
 class HistoryInput(BoxLayout):
@@ -62,21 +67,6 @@ class RemoSpeaker(BoxLayout):
 
 
 class RemoSpeakerApp(App):
-    def on_start(self):
-        if platform == 'android':
-            self.start_service()
-            print('service started')
-
-    def start_service(self):
-        from jnius import autoclass
-        from android import mActivity
-        context = mActivity.getApplicationContext()
-        SERVICE_NAME = str(context.getPackageName()) + '.Service' + 'Worker'
-        print(SERVICE_NAME)
-        service = autoclass(SERVICE_NAME)
-        service.start(mActivity, '')
-        return service
-
     def build(self):
         return RemoSpeaker()
 
