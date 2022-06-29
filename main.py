@@ -60,6 +60,14 @@ class RemoSpeaker(BoxLayout):
         self.io_history.add_widget(work_around)
         self.io_history.remove_widget(work_around)
 
+
+
+print("############################## PYTHON ACTIVITY BELOW ##############################")
+from jnius import autoclass
+PythonActivity = autoclass('org.kivy.android.PythonActivity')
+print(type(PythonActivity))
+
+
 import jnius
 Context = jnius.autoclass('android.content.Context')
 Intent = jnius.autoclass('android.content.Intent')
@@ -69,7 +77,10 @@ NotificationBuilder = jnius.autoclass('android.app.Notification$Builder')
 Notification = jnius.autoclass('android.app.Notification')
 service_name = 'Worker'
 package_name = Context.getApplicationContext()
-service = jnius.autoclass('org.kivy.android.PythonService').mService
+PythonService = jnius.autoclass('org.kivy.android.PythonService')
+print(type(PythonService))
+service = PythonService.mService
+print(type(service))
 # Previous version of Kivy had a reference to the service like below.
 #service = jnius.autoclass('{}.Service{}'.format(package_name, service_name)).mService
 PythonActivity = jnius.autoclass('org.kivy.android' + '.PythonActivity')
@@ -100,13 +111,9 @@ service.startForeground(1, new_notification)
 
 class RemoSpeakerApp(App):
     def on_start(self):
+        pass
 
 
-
-        print("############################## PYTHON ACTIVITY BELOW ##############################")
-        from jnius import autoclass
-        PythonActivity = autoclass('org.kivy.android.PythonActivity')
-        print(type(PythonActivity))
 
 
     def start_service(self):
