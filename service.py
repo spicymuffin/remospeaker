@@ -7,7 +7,7 @@ import time
 
 
 PythonService = autoclass('org.kivy.android.PythonService')
-PythonService.mService.setAutoRestartService(True)
+#PythonService.mService.setAutoRestartService(True)
 
 print(type(PythonService.mService))
 

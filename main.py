@@ -4,14 +4,12 @@ from kivy.uix.widget import Widget
 from kivy.uix.boxlayout import BoxLayout
 from kivy.properties import ObjectProperty
 from kivy.clock import Clock
-from kivy.app import App
-from kivy.core.audio import SoundLoader
-from kivy.utils import platform
+
 
 import kivy
 from kivy.app import App
 from kivy.uix.screenmanager import ScreenManager, Screen
-from kivy.uix.widget import Widget 
+from kivy.uix.widget import Widget
 from jnius import autoclass
 import time
 
@@ -70,11 +68,6 @@ class RemoSpeaker(BoxLayout):
 
 
 print("############################## PYTHON ACTIVITY BELOW ##############################")
-from jnius import autoclass
-PythonActivity = autoclass('org.kivy.android.PythonActivity')
-print(type(PythonActivity))
-
-
 import jnius
 Context = jnius.autoclass('android.content.Context')
 Intent = jnius.autoclass('android.content.Intent')
