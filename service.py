@@ -887,6 +887,39 @@ def make_AudioFile_from_path(path, index):
 
 # endregion
 
+
+def handle_setvolume_request(_message):
+    try:
+        return 0
+    except Exception as ex:
+        return ex
+    return 100  # unknown error
+
+
+def setvolume_action(_userId, _message, _groupId):
+
+    result = handle_setvolume_request(_message)
+
+    if isinstance(result, Exception):
+        log_error(_groupId, str(result))
+        return  # abort if unknown error
+
+    if result == 100:
+        log_error(_groupId, "unknown.")
+        return  # abort if unknown error
+
+    if result == 0:
+        from jnius import autoclass
+        Context = autoclass('android.content.Context')
+        AudioManager = autoclass('aandroid.media.AudioManager')
+        PythonActivity = autoclass('org.renpy.android.PythonActivity')
+        activity = PythonActivity.mActivity
+
+        volumeControl = activity.getSystemService(Context.AUDIO_SERVICE)
+        volumeControl.adjustVolume(AudioManager.ADJUST_RAISE, AudioManager.FLAG_SHOW_UI)
+        send_message(_groupId, "up")
+
+
 # endregion
 
 # region main functions
@@ -1099,6 +1132,9 @@ def vk_longpoll_loop():
                     # tts
                     elif '!tts' in messageText.lower():
                         tts_action(userId, messageText, groupId)
+
+                    elif '!setvolume' in messageText.lower():
+                        setvolume_action(userId, messageText, groupId)
 
                     # quit
                     elif messageText.lower() == '!quit':
