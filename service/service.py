@@ -999,7 +999,7 @@ def status_action(_userId, _message, _groupId):
         if arg == "bat" or arg == "battery":
             from jnius import autoclass
             Context = autoclass('android.content.Context')
-            BatteryManager = autoclass('android.media.BatteryManager')
+            BatteryManager = autoclass('android.os.BatteryManager')
             service = autoclass('org.kivy.android.PythonService').mService
             BatteryService = service.getSystemService(Context.BATTERY_SERVICE)
             charge = BatteryService.getIntProperty(BatteryManager.BATTERY_PROPERTY_CAPACITY)
