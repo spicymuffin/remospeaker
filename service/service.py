@@ -1224,6 +1224,8 @@ def reset():
     TTS_READING = 0
     TTS_GENERATING = 0
 
+    startup()
+
 
 def load_files():
     arr = os.listdir(AUDIO_FILES_DIR)
