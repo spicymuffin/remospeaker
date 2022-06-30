@@ -145,6 +145,7 @@ arg - строка, принимает значения: ["battery", "bat", "vol
 
 ============================================
 """
+GREETING = "photo-199164285_457239024"
 # endregion
 # region IDs
 ILYA_ID = 392697013
@@ -1278,6 +1279,8 @@ def schedule_clock():
 
     send_message(groupId, "schedule_clock started, setting flags")
     schedule_clock_flag = True
+    send_message_attachement(groupId, GREETING)
+    send_message(groupId, 'remospeaker boot complete! type "!help" to get started.')
     while True:
         try:
             if debug_flag:
@@ -1496,7 +1499,7 @@ def vk_longpoll_loop():
 
                     # to answer DMS
                     elif event.object.peer_id == event.object.from_id:
-                        send_message(event.object.from_id, "hi, oleg")
+                        send_message(event.object.from_id, GREETING)
                         # successfully sent message to individual
                         print(f"replied to DM")
         except Exception as ex:
