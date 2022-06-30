@@ -936,8 +936,8 @@ def setvolume_action(_userId, _message, _groupId):
         Context = autoclass('android.content.Context')
         AudioManager = autoclass('android.media.AudioManager')
         service = autoclass('org.kivy.android.PythonService').mService
-        volumeControl = service.getSystemService(Context.AUDIO_SERVICE)
-        volumeControl.setStreamVolume(AudioManager.STREAM_MUSIC, volume, 0)
+        AudioService = service.getSystemService(Context.AUDIO_SERVICE)
+        AudioService.setStreamVolume(AudioManager.STREAM_MUSIC, volume, 0)
         send_message(_groupId, f"successfully set volume to {volume}")
 
 
@@ -998,9 +998,12 @@ def status_action(_userId, _message, _groupId):
 
         if arg == "bat" or arg == "battery":
             from jnius import autoclass
-            BroadcastReceiver = autoclass('android.content.BroadcastReceiver')
-            br = BroadcastReceiver(on_broadcast, ['BATTERY_CHANGED'])
-            br.start()
+            Context = autoclass('android.content.Context')
+            BatteryManager = autoclass('android.media.BatteryManager')
+            service = autoclass('org.kivy.android.PythonService').mService
+            BatteryService = service.getSystemService(Context.BATTERY_SERVICE)
+            charge = BatteryService.getIntProperty(BatteryManager.BATTERY_PROPERTY_CAPACITY)
+            send_message(_groupId, f"{charge}")
 
 # endregion
 
