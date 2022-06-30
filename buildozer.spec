@@ -96,7 +96,7 @@ fullscreen = 0
 #icon.adaptive_background.filename = %(source.dir)s/data/icon_bg.png
 
 # (list) Permissions
-android.permissions = INTERNET, WRITE_EXTERNAL_STORAGE, READ_INTERNAL_STORAGE, FOREGROUND_SERVICE
+android.permissions = INTERNET, WRITE_EXTERNAL_STORAGE, READ_INTERNAL_STORAGE, FOREGROUND_SERVICE, WAKE_LOCK
 
 # (list) features (adds uses-feature -tags to manifest)
 #android.features = android.hardware.usb.host
@@ -239,7 +239,7 @@ android.permissions = INTERNET, WRITE_EXTERNAL_STORAGE, READ_INTERNAL_STORAGE, F
 
 # (bool) Indicate whether the screen should stay on
 # Don't forget to add the WAKE_LOCK permission if you set this to True
-#android.wakelock = False
+android.wakelock = True
 
 # (list) Android application meta-data to set (key=value format)
 #android.meta_data =
