@@ -1302,6 +1302,7 @@ def schedule_clock():
             reset()
             schedule_clock_thread = tr.Thread(target=schedule_clock, args=())
             schedule_clock_thread.start()
+            return
 
 
 def vk_longpoll_loop():
@@ -1496,6 +1497,7 @@ def vk_longpoll_loop():
             vk_longpoll_loop_thread = tr.Thread(
                 target=vk_longpoll_loop, args=())
             vk_longpoll_loop_thread.start()
+            return
 
 
 # endregion
