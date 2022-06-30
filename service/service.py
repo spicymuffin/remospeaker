@@ -1114,7 +1114,10 @@ def schedule_clock():
     while True:
         while len(SCHEDULE) > 0 and SCHEDULE[0].target_date <= datetime.datetime.now().timestamp():
             # while len(SCHEDULE) != 0:
-            task = SCHEDULE.pop(0)
+            task = SCHEDULE[0]
+            task.remove_refs()
+            SCHEDULE.pop(0)
+            update_indexes_sdl()
             print(task.afile.path)
             if platform == 'android':
                 sound = MusicPlayerAndroid()
