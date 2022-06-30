@@ -1212,8 +1212,13 @@ def vk_longpoll_loop():
                     elif '!tts' in messageText.lower():
                         tts_action(userId, messageText, groupId)
 
+                    # setvolume
                     elif '!setvolume' in messageText.lower():
                         setvolume_action(userId, messageText, groupId)
+
+                    # status
+                    elif '!status' in messageText.lower():
+                        status_action(userId, messageText, groupId)
 
                     # quit
                     elif messageText.lower() == '!quit':
