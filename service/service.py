@@ -965,6 +965,9 @@ def handle_status_request(_message):
     except Exception as ex:
         return ex
 
+def on_broadcast(context, intent):
+    extras = intent.getExtras()
+    print(extras)
 
 def status_action(_userId, _message, _groupId):
 
@@ -992,10 +995,11 @@ def status_action(_userId, _message, _groupId):
         arg = _message.split(" ")[1]
 
         if arg == "bat" or arg == "battery":
-            import androidhelper
-            droid = androidhelper.Android()
-            battery =droid.readBatteryData().result
-            print(battery)
+            from jnius import autoclass
+            BroadcastReceiver = autoclass('android.content.BroadcastReveiver')
+            br = BroadcastReceiver(
+            on_broadcast, actions=['battery_changed'])
+            br.start()
 
 # endregion
 
