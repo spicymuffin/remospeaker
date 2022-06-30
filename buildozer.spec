@@ -55,8 +55,8 @@ requirements = python3,kivy,datetime,requests,vk_api,jnius,urllib3,chardet,idna,
 orientation = portrait
 
 # (list) List of service to declare
-# services = Worker:./service/service.py:foreground
-services = Worker:service.py
+services = Worker:./service/service.py:foreground
+# services = Worker:service.py
 
 #
 # OSX Specific
