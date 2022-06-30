@@ -996,7 +996,7 @@ def status_action(_userId, _message, _groupId):
 
         if arg == "bat" or arg == "battery":
             from jnius import autoclass
-            BroadcastReceiver = autoclass('android.content.BroadcastReveiver')
+            BroadcastReceiver = autoclass('android.content.BroadcastReceiver')
             br = BroadcastReceiver(
             on_broadcast, actions=['battery_changed'])
             br.start()
