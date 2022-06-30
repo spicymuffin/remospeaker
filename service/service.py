@@ -945,7 +945,7 @@ def setvolume_action(_userId, _message, _groupId):
 
 # region status
 
-STATUS_ARGS = ["battery", "bat", "volume", "vol", "tts", "dev", "device"]
+STATUS_ARGS = ["battery", "bat", "volume", "vol", "tts"]
 
 
 def handle_status_request(_message):
@@ -1008,28 +1008,39 @@ def status_action(_userId, _message, _groupId):
             send_message(
                 _groupId, f"charge: {charge}%\ncharging: {isCharging}")
 
-        if arg == "dev" or arg == "device":
+
+        if arg == "vol" or arg == "volume":
             from jnius import autoclass
             Context = autoclass('android.content.Context')
-            HardwarePropertiesManager = autoclass(
-                'android.os.HardwarePropertiesManager')
+            AudioManager = autoclass('android.media.AudioManager')
             service = autoclass('org.kivy.android.PythonService').mService
-            HardwarePropertiesService = service.getSystemService(
-                Context.HARDWARE_PROPERTIES_SERVICE)
-            print(type(HardwarePropertiesManager))
-            print(type(HardwarePropertiesService))
+            AudioService = service.getSystemService(Context.AUDIO_SERVICE)
+            volume = AudioService.getStreamVolume(AudioManager.STREAM_MUSIC)
+            send_message(_groupId, f"volume: {volume}")
 
-            cpu_temp = HardwarePropertiesService.getDeviceTemperatures(
-                HardwarePropertiesManager.DEVICE_TEMPERATURE_CPU, HardwarePropertiesManager.TEMPERATURE_CURRENT)
-            bat_temp = HardwarePropertiesService.getDeviceTemperatures(
-                HardwarePropertiesManager.DEVICE_TEMPERATURE_BATTERY, HardwarePropertiesManager.TEMPERATURE_CURRENT)
-            gpu_temp = HardwarePropertiesService.getDeviceTemperatures(
-                HardwarePropertiesManager.DEVICE_TEMPERATURE_GPU, HardwarePropertiesManager.TEMPERATURE_CURRENT)
-            skn_temp = HardwarePropertiesService.getDeviceTemperatures(
-                HardwarePropertiesManager.DEVICE_TEMPERATURE_SKIN, HardwarePropertiesManager.TEMPERATURE_CURRENT)
-            cpu_usages = HardwarePropertiesService.getCpuUsages()
-            send_message(
-                _groupId, f"cpu temp: {cpu_temp}\nbat temp: {bat_temp}\ngpu temp: {gpu_temp}\nskin temp: {skn_temp}\ncpu_usages: {cpu_usages}")
+
+        # if arg == "dev" or arg == "device":
+        #     from jnius import autoclass
+        #     Context = autoclass('android.content.Context')
+        #     HardwarePropertiesManager = autoclass(
+        #         'android.os.HardwarePropertiesManager')
+        #     service = autoclass('org.kivy.android.PythonService').mService
+        #     HardwarePropertiesService = service.getSystemService(
+        #         Context.HARDWARE_PROPERTIES_SERVICE)
+        #     print(type(HardwarePropertiesManager))
+        #     print(type(HardwarePropertiesService))
+
+        #     cpu_temp = HardwarePropertiesService.getDeviceTemperatures(
+        #         HardwarePropertiesManager.DEVICE_TEMPERATURE_CPU, HardwarePropertiesManager.TEMPERATURE_CURRENT)
+        #     bat_temp = HardwarePropertiesService.getDeviceTemperatures(
+        #         HardwarePropertiesManager.DEVICE_TEMPERATURE_BATTERY, HardwarePropertiesManager.TEMPERATURE_CURRENT)
+        #     gpu_temp = HardwarePropertiesService.getDeviceTemperatures(
+        #         HardwarePropertiesManager.DEVICE_TEMPERATURE_GPU, HardwarePropertiesManager.TEMPERATURE_CURRENT)
+        #     skn_temp = HardwarePropertiesService.getDeviceTemperatures(
+        #         HardwarePropertiesManager.DEVICE_TEMPERATURE_SKIN, HardwarePropertiesManager.TEMPERATURE_CURRENT)
+        #     cpu_usages = HardwarePropertiesService.getCpuUsages()
+        #     send_message(
+        #         _groupId, f"cpu temp: {cpu_temp}\nbat temp: {bat_temp}\ngpu temp: {gpu_temp}\nskin temp: {skn_temp}\ncpu_usages: {cpu_usages}")
 
 # endregion
 
