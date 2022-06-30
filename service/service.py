@@ -1,3 +1,4 @@
+from this import d
 from kivy.logger import Logger
 import threading as tr
 import datetime
@@ -23,7 +24,7 @@ vk.get_api()
 longpoll = VkBotLongPoll(vk, 199164285)
 # endregion
 
-# region variables
+# region global variables
 # region IDs
 ILYA_ID = 392697013
 CREATOR_ID = 392697013
@@ -888,7 +889,19 @@ def make_AudioFile_from_path(path, index):
 
 def handle_setvolume_request(_message):
     try:
-        return 0
+        splt = _message.split(" ")
+
+        if len(splt) < 2:
+            return 2  # invalid arg count
+
+        volume = _message.split(" ")[1]
+        volume = int(volume)
+
+        if 0 <= volume <= 20:
+            return 0
+        else:
+            return 1  # volume should be between 0 and 20
+
     except Exception as ex:
         return ex
     return 100  # unknown error
@@ -902,26 +915,93 @@ def setvolume_action(_userId, _message, _groupId):
         log_error(_groupId, str(result))
         return  # abort if unknown error
 
+    if result == 1:
+        log_error(_groupId, "volume should be between 0 and 20")
+        return  # abort if volume not between 0 and 20
+
+    if result == 2:
+        log_error(_groupId, "invalid number of parameters")
+        return  # abort if invalid number of parameters
+
     if result == 100:
         log_error(_groupId, "unknown.")
         return  # abort if unknown error
 
     if result == 0:
+        splt = _message.split(" ")
+        volume = _message.split(" ")[1]
+        volume = int(volume)
+
         from jnius import autoclass
         Context = autoclass('android.content.Context')
         AudioManager = autoclass('android.media.AudioManager')
         service = autoclass('org.kivy.android.PythonService').mService
         volumeControl = service.getSystemService(Context.AUDIO_SERVICE)
-        volumeControl.setStreamVolume(AudioManager.STREAM_MUSIC, 20, 0)
-        send_message(_groupId, "up")
+        volumeControl.setStreamVolume(AudioManager.STREAM_MUSIC, volume, 0)
+        send_message(_groupId, f"successfully set volume to {volume}")
 
 
 # endregion
 
+# region status
+
+STATUS_ARGS = ["battery, bat, volume, vol, tts,"]
+
+
+def handle_status_request(_message):
+    try:
+        splt = _message.split(" ")
+
+        if len(splt) < 2:
+            return 2  # invalid arg count
+
+        arg = _message.split(" ")[1]
+
+        if arg not in STATUS_ARGS:
+            return 1  # invalid arg
+        if arg in STATUS_ARGS:
+            return 0  # success
+        return 100  # unknown error
+    except Exception as ex:
+        return ex
+
+
+def status_action(_userId, _message, _groupId):
+
+    result = handle_status_request(_message)
+
+    if isinstance(result, Exception):
+        log_error(_groupId, str(result))
+        return  # abort if unknown error
+
+    if result == 1:
+        log_error(
+            _groupId, f"invalid argument, possible are: {' '.join(STATUS_ARGS)}")
+        return  # abort if invalid arg
+
+    if result == 2:
+        log_error(_groupId, "invalid number of parameters")
+        return  # abort if invalid number of parameters
+
+    if result == 100:
+        log_error(_groupId, "unknown.")
+        return  # abort if unknown error
+
+    if result == 0:
+        splt = _message.split(" ")
+        arg = _message.split(" ")[1]
+
+        if arg == "bat" or arg == "battery":
+            import androidhelper
+            droid = androidhelper.Android()
+            battery =droid.readBatteryData().result
+            print(battery)
 
 # endregion
 
-# region main functions
+# endregion
+
+    # region main functions
 
 
 def load_files():

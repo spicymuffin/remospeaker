@@ -37,7 +37,7 @@ version = 1.1
 
 # (list) Application requirements
 # comma separated e.g. requirements = sqlite3,kivy
-requirements = python3,kivy,datetime,requests,vk_api,jnius,urllib3,chardet,idna,ffpyplayer,gtts,android
+requirements = python3,kivy,datetime,requests,vk_api,jnius,urllib3,chardet,idna,ffpyplayer,gtts,android,androidhelper
 # requirements = python3,kivy==2.0.0,kivymd==0.104.2,numpy,pillow,kivy_garden.mapview,requests,charset_normalizer,chardet,idna, urllib3,certifi,plyer==2.0.0,sqlite3,pickle-mixin,kivygradient,android
 # requirements = python3,kivy==2.0.0,kivymd==0.104.2,numpy,pillow,kivy_garden.mapview,requests,charset_normalizer,chardet,idna, urllib3,certifi,plyer==2.0.0,sqlite3,pickle-mixin,kivygradient,jnius,android
 
