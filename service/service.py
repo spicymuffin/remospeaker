@@ -1004,8 +1004,9 @@ def status_action(_userId, _message, _groupId):
             BatteryService = service.getSystemService(Context.BATTERY_SERVICE)
             charge = BatteryService.getIntProperty(BatteryManager.BATTERY_PROPERTY_CAPACITY)
             isCharging = BatteryService.isCharging()
-            temp = BatteryService.getIntProperty(BatteryManager.EXTRA_TEMPERATURE)
-            voltage = BatteryService.getLongProperty(BatteryManager.EXTRA_VOLTAGE)
+            intent = autoclass("android.content.Intent")
+            temp = intent.getIntExtra(BatteryManager.EXTRA_TEMPERATURE)
+            voltage = intent.getLongExtra(BatteryManager.EXTRA_VOLTAGE)
             send_message(_groupId, f"Charge: {charge}\nIs charging? {isCharging}\nTemp: {temp}\n Voltage: {voltage}")
 
 # endregion
