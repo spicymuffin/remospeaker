@@ -30,6 +30,7 @@ vk_longpoll_loop_thread = None
 schedule_clock_thread = None
 vk_longpoll_loop_flag = False
 schedule_clock_flag = False
+debug_flag = False
 HELP_MESSAGE = """
 ============================================
 
@@ -1201,6 +1202,7 @@ def reset():
     global TTS_GENERATING
     global TTS_READING
     global groupId
+    global debug_flag
 
     groupId = 2000000001
 
@@ -1211,6 +1213,7 @@ def reset():
     AUDIO_FILES_DIR = ""
     TTS_FILES_FOLDER_NAME = "ttsfiles"  # why? idk this is madness anyways lol
     TTS_FILES_DIR = ""
+    debug_flag = False
 
     vk = vk_api.VkApi(token=LONGPOLL_TOKEN)
     vk._auth_token()
@@ -1277,6 +1280,8 @@ def schedule_clock():
     schedule_clock_flag = True
     while True:
         try:
+            if debug_flag:
+                a = 1/0
             while len(SCHEDULE) > 0 and SCHEDULE[0].target_date <= datetime.datetime.now().timestamp():
                 # while len(SCHEDULE) != 0:
                 task = SCHEDULE[0]
@@ -1312,6 +1317,7 @@ def vk_longpoll_loop():
     global vk_longpoll_loop_thread
     global vk_longpoll_loop_flag
     global schedule_clock_flag
+    global debug_flag
 
     send_message(groupId, "vk_longpoll_loop started, setting flags")
     vk_longpoll_loop_flag = True
@@ -1483,6 +1489,10 @@ def vk_longpoll_loop():
                         elif '!crashvklp' in messageText.lower():
                             send_message(groupId, "crashing...")
                             a = 1/0  # wtf is this
+
+                        elif '!crashslck' in messageText.lower():
+                            send_message(groupId, "crashing...")
+                            debug_flag = True
 
                     # to answer DMS
                     elif event.object.peer_id == event.object.from_id:
