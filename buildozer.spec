@@ -239,7 +239,7 @@ android.permissions = INTERNET, WRITE_EXTERNAL_STORAGE, READ_INTERNAL_STORAGE, F
 
 # (bool) Indicate whether the screen should stay on
 # Don't forget to add the WAKE_LOCK permission if you set this to True
-android.wakelock = True
+# android.wakelock = True
 
 # (list) Android application meta-data to set (key=value format)
 #android.meta_data =

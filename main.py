@@ -57,10 +57,20 @@ class RemoSpeaker(BoxLayout):
         self.io_history.remove_widget(work_around)
 
 
+
+
 class RemoSpeakerApp(App):
     def on_start(self):
         self.start_service()
         print('service started')
+        PythonActivity = autoclass('org.kivy.android.PythonActivity')
+        activity = PythonActivity.mActivity
+        Context = autoclass('android.content.Context')
+        PowerManager = autoclass('android.os.PowerManager')
+        power = activity.getSystemService(Context.POWER_SERVICE)
+        global wakelock
+        wakelock = power.newWakeLock(PowerManager.PARTIAL_WAKE_LOCK, 'TAG')
+        wakelock.acquire()
 
     def start_service(self):
         from jnius import autoclass

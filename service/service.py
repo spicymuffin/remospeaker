@@ -174,20 +174,6 @@ REFRESH_RATE = 1
 # endregion
 # endregion
 
-# from jnius import autoclass
-
-# from jnius import autoclass
-# Context = autoclass('android.content.Context')
-# BatteryManager = autoclass('android.os.BatteryManager')
-# service = autoclass('org.kivy.android.PythonService').mService
-# BatteryService = service.getSystemService(Context.BATTERY_SERVICE)
-# charge = BatteryService.getIntProperty(
-#     BatteryManager.BATTERY_PROPERTY_CAPACITY)
-# isCharging = BatteryService.isCharging()
-
-# getSystemService(Context.POWER_SERVICE) as PowerManager).run
-
-
 # region classes
 
 
