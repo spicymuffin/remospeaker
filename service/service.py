@@ -298,7 +298,7 @@ def send_message(_chatId, _message):
         "peer_id": _chatId, "message": _message, "random_id": 0})
 
 
-def send_message_attachement(_chatId, _message, _attachement):
+def send_message_attachement(_chatId, _message = "", _attachement=GREETING):
     return vk.method("messages.send", {
         "peer_id": _chatId, "message": _message, "attachment": _attachement, "random_id": 0})
 
@@ -1279,8 +1279,6 @@ def schedule_clock():
 
     send_message(groupId, "schedule_clock started, setting flags")
     schedule_clock_flag = True
-    send_message_attachement(groupId, GREETING)
-    send_message(groupId, 'remospeaker boot complete! type "!help" to get started.')
     while True:
         try:
             if debug_flag:
@@ -1324,6 +1322,8 @@ def vk_longpoll_loop():
 
     send_message(groupId, "vk_longpoll_loop started, setting flags")
     vk_longpoll_loop_flag = True
+    send_message_attachement(groupId, GREETING)
+    send_message(groupId, 'remospeaker boot complete! type "!help" to get started.')
     while True:
         try:
             for event in longpoll.listen():
