@@ -912,7 +912,7 @@ def setvolume_action(_userId, _message, _groupId):
         AudioManager = autoclass('android.media.AudioManager')
         service = autoclass('org.kivy.android.PythonService').mService
         volumeControl = service.getSystemService(Context.AUDIO_SERVICE)
-        volumeControl.adjustVolume(AudioManager.ADJUST_LOWER)
+        volumeControl.adjustVolume(AudioManager.ADJUST_LOWER, 0)
         send_message(_groupId, "up")
 
 
