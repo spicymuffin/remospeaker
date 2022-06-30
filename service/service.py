@@ -1003,7 +1003,8 @@ def status_action(_userId, _message, _groupId):
             service = autoclass('org.kivy.android.PythonService').mService
             BatteryService = service.getSystemService(Context.BATTERY_SERVICE)
             charge = BatteryService.getIntProperty(BatteryManager.BATTERY_PROPERTY_CAPACITY)
-            send_message(_groupId, f"{charge}")
+            isCharging = BatteryService.isCharging()
+            send_message(_groupId, f"{charge} {isCharging}")
 
 # endregion
 
