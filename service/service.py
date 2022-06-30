@@ -389,6 +389,8 @@ def quit_action(parameters):
 
 # region tts
 
+TTS_GENERATING = 0
+TTS_READING = 0
 
 def format_message(msg):
     if len(msg) > 30:
@@ -439,10 +441,15 @@ def tts_action(_userId, _message, _groupId):
 
 
 def tts_thread(_message, _groupId):
+
+    global TTS_GENERATING
+    global TTS_READING
+
     languagecode = _message.split(" ")[1]
     msg = " ".join(_message.split(" ")[2:])
     send_message(
         _groupId, f'started tts thread, processing...\nmsg: {format_message(msg)}')
+    TTS_GENERATING += 1
     try:
         if platform == 'android':
             from jnius import autoclass
@@ -459,6 +466,8 @@ def tts_thread(_message, _groupId):
             mPlayer.prepare()
             send_message(
                 _groupId, f'file generated. reading...\nmsg: {format_message(msg)}')
+            TTS_GENERATING -= 1
+            TTS_READING += 1
             # play
             mPlayer.start()
             print('duration:', mPlayer.getDuration())
@@ -481,6 +490,7 @@ def tts_thread(_message, _groupId):
     send_message(
         _groupId, f'finished reading {format_message(msg)} in {gtts.lang.tts_langs()[languagecode]}')
 
+    TTS_READING -= 1
 
 # endregion tts
 
@@ -897,10 +907,10 @@ def handle_setvolume_request(_message):
         volume = _message.split(" ")[1]
         volume = int(volume)
 
-        if 0 <= volume <= 20:
+        if 0 <= volume <= 15:
             return 0
         else:
-            return 1  # volume should be between 0 and 20
+            return 1  # volume should be between 0 and 15
 
     except Exception as ex:
         return ex
@@ -916,8 +926,8 @@ def setvolume_action(_userId, _message, _groupId):
         return  # abort if unknown error
 
     if result == 1:
-        log_error(_groupId, "volume should be between 0 and 20")
-        return  # abort if volume not between 0 and 20
+        log_error(_groupId, "volume should be between 0 and 15")
+        return  # abort if volume not between 0 and 15
 
     if result == 2:
         log_error(_groupId, "invalid number of parameters")
@@ -973,6 +983,9 @@ def on_broadcast(context, intent):
 
 def status_action(_userId, _message, _groupId):
 
+    global TTS_GENERATING
+    global TTS_READING
+
     result = handle_status_request(_message)
 
     if isinstance(result, Exception):
@@ -1017,6 +1030,10 @@ def status_action(_userId, _message, _groupId):
             AudioService = service.getSystemService(Context.AUDIO_SERVICE)
             volume = AudioService.getStreamVolume(AudioManager.STREAM_MUSIC)
             send_message(_groupId, f"volume: {volume}")
+
+
+        if arg == "tts":
+            send_message(_groupId, f"tts reading: {TTS_READING}\ntts generating: {TTS_GENERATING}")
 
 
         # if arg == "dev" or arg == "device":
