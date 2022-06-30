@@ -25,6 +25,122 @@ longpoll = VkBotLongPoll(vk, 199164285)
 # endregion
 
 # region global variables
+# region misc
+HELP_MESSAGE = """
+============================================
+
+!promote {id}: делает админом (требует прав)
+
+id - id повышаемого
+
+============================================
+
+!demote {id}: понижает с должности админа (требует прав)
+
+id - id понижаемого
+
+============================================
+
+!nuke: удаляет всех админов (требует прав)
+
+============================================
+
+!showid: показывает id отправителя
+
+============================================
+
+!cringepic: я не знаю что это
+
+============================================
+
+!debug: проверяет доступность робота
+
+============================================
+
+!showadmin: показывает список админов
+
+============================================
+
+!showaudiofiles: показать аудио файлы в локальной памяти
+сокращения: !saf
+
+============================================
+
+!scheduleplaybacktimer: {af_index} {delta}{unit}: воспроизводит аудио файл через заданное время
+
+af_index - индекс воспроизводимого аудио файла
+delta - через сколько воспроизводить
+unit - единицы измерения
+
+ПРИМЕР ИСПОЛЬЗОВАНИЯ:
+!scheduleplaybacktimer 0 5h
+(воспроизводит аудио файл номер 0 через 5 часов)
+
+сокращения: !spbt
+
+============================================
+
+!scheduleplayback: {af_index} {timestamp}: воспроизвести аудио файл в назначенную дату
+
+af_index - индекс воспроизводимого аудио файла
+timestamp - дата воспроизведения (формат: год-месяц-день@час:минута:секунда)
+
+ПРИМЕР ИСПОЛЬЗОВАНИЯ:
+!scheduleplayback 0 2022-06-30@23:42:40
+(воспроизводит аудио файл номер 0 в 11:42:40 2022 года 30 июня)
+
+сокращения: !spb
+
+============================================
+
+!showschedule: показывает "расписание"
+
+сокращения: !ss
+
+============================================
+
+!deleteaudiofile {af_index}: удаляет аудио файл
+
+af_index - индекс удаляемого аудио файла
+
+сокращения: !daf
+
+============================================
+
+!deletetask {task_index}: удаляет задачу
+
+task_index - индекс удаляемой "задачи"
+
+сокращения: !dt
+
+============================================
+
+!tts {lang} {message}: генерирует и воспроизводит аудио файл с роботическим голосом, читающий сообщение
+
+lang - код языка
+message - сообщение (творите, не стесняйтесь, но не перебарщивайте с длиной, бот может впасть в тильт!)
+
+============================================
+
+!setvolume {val}: устанавливает громкость на устройстве
+
+val - число в [0;15] (целое!), громкость
+
+сокращения: !sv
+
+============================================
+
+!status {arg}: дает статус модуля бота
+
+arg - строка, принимает значения: ["battery", "bat", "volume", "vol", "tts"]
+
+============================================
+
+!quit: убивает бота (так делать не надо!)
+
+============================================
+"""
+# endregion
 # region IDs
 ILYA_ID = 392697013
 CREATOR_ID = 392697013
@@ -367,11 +483,15 @@ def showadmin_action(_groupId):
 # region authandexecute
 
 
-def authenticate_and_execute(_toAuthenticate, _toExecute, _parameters, _groupId):
+def authenticate_and_execute(_toAuthenticate, _toExecute, _parameters, _groupId, creator=False):
     if _toAuthenticate in ADMIN_ID_LIST:
         _toExecute(_parameters)
     else:
         send_message(_groupId, "ACCESS DENIED: not admin.")
+    if _toAuthenticate == CREATOR_ID:
+        _toExecute(_parameters)
+    else:
+        send_message(_groupId, "ACCESS DENIED: not creator.")
 
 
 # endregion authandexecute
@@ -391,6 +511,7 @@ def quit_action(parameters):
 
 TTS_GENERATING = 0
 TTS_READING = 0
+
 
 def format_message(msg):
     if len(msg) > 30:
@@ -1021,7 +1142,6 @@ def status_action(_userId, _message, _groupId):
             send_message(
                 _groupId, f"charge: {charge}%\ncharging: {isCharging}")
 
-
         if arg == "vol" or arg == "volume":
             from jnius import autoclass
             Context = autoclass('android.content.Context')
@@ -1031,10 +1151,9 @@ def status_action(_userId, _message, _groupId):
             volume = AudioService.getStreamVolume(AudioManager.STREAM_MUSIC)
             send_message(_groupId, f"volume: {volume}")
 
-
         if arg == "tts":
-            send_message(_groupId, f"tts reading: {TTS_READING}\ntts generating: {TTS_GENERATING}")
-
+            send_message(
+                _groupId, f"tts reading: {TTS_READING}\ntts generating: {TTS_GENERATING}")
 
         # if arg == "dev" or arg == "device":
         #     from jnius import autoclass
@@ -1133,6 +1252,7 @@ def schedule_clock():
 
 def vk_longpoll_loop():
     global groupId
+    global HELP_MESSAGE
     while True:
         for event in longpoll.listen():
             if event.type == VkBotEventType.MESSAGE_NEW:
@@ -1262,7 +1382,7 @@ def vk_longpoll_loop():
                         showschedule_action(groupId)
 
                     # deleteaf
-                    elif '!deleteaf' in messageText.lower() or '!daf' in messageText.lower():
+                    elif '!deleteaudiofile' in messageText.lower() or '!daf' in messageText.lower():
                         deleteaf_action(userId, messageText, groupId)
 
                     # deletetask
@@ -1271,14 +1391,14 @@ def vk_longpoll_loop():
 
                     # ttstimed
                     elif '!ttstimed' in messageText.lower() or '!ttst' in messageText.lower():
-                        deletetask_action(userId, messageText, groupId)
+                        pass
 
                     # tts
                     elif '!tts' in messageText.lower():
                         tts_action(userId, messageText, groupId)
 
                     # setvolume
-                    elif '!setvolume' in messageText.lower():
+                    elif '!setvolume' in messageText.lower() or '!sv' in messageText.lower():
                         setvolume_action(userId, messageText, groupId)
 
                     # status
@@ -1288,7 +1408,11 @@ def vk_longpoll_loop():
                     # quit
                     elif messageText.lower() == '!quit':
                         authenticate_and_execute(
-                            userId, quit_action, [groupId], groupId)
+                            userId, quit_action, [groupId], groupId, True)
+
+                    # help
+                    elif '!help' in messageText.lower():
+                        send_message(groupId, HELP_MESSAGE)
 
                 # to answer DMS
                 elif event.object.peer_id == event.object.from_id:
