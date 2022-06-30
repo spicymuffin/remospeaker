@@ -1017,15 +1017,15 @@ def status_action(_userId, _message, _groupId):
             HardwarePropertiesService = service.getSystemService(
                 Context.HARDWARE_PROPERTIES_SERVICE)
             cpu_temp = HardwarePropertiesService.getIntProperty(
-                BatteryManager.DEVICE_TEMPERATURE_CPU)
+                HardwarePropertiesManager.DEVICE_TEMPERATURE_CPU)
             bat_temp = HardwarePropertiesService.getIntProperty(
-                BatteryManager.DEVICE_TEMPERATURE_BATTERY)
+                HardwarePropertiesManager.DEVICE_TEMPERATURE_BATTERY)
             gpu_temp = HardwarePropertiesService.getIntProperty(
-                BatteryManager.DEVICE_TEMPERATURE_GPU)
+                HardwarePropertiesManager.DEVICE_TEMPERATURE_GPU)
             skn_temp = HardwarePropertiesService.getIntProperty(
-                BatteryManager.DEVICE_TEMPERATURE_SKIN)
+                HardwarePropertiesManager.DEVICE_TEMPERATURE_SKIN)
             cur_temp = HardwarePropertiesService.getIntProperty(
-                BatteryManager.TEMPERATURE_CURRENT)
+                HardwarePropertiesManager.TEMPERATURE_CURRENT)
             cpu_usages = HardwarePropertiesService.	getCpuUsages()
             send_message(
                 _groupId, f"cpu temp: {cpu_temp}\nbat temp: {bat_temp}\ngpu temp: {gpu_temp}\nskin temp: {skn_temp}\ncurrent temp: {cur_temp}\ncpu_usages: {cpu_usages}")
