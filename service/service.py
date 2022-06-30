@@ -945,7 +945,7 @@ def setvolume_action(_userId, _message, _groupId):
 
 # region status
 
-STATUS_ARGS = ["battery, bat, volume, vol, tts,"]
+STATUS_ARGS = ["battery", "bat", "volume", "vol", "tts"]
 
 
 def handle_status_request(_message):
