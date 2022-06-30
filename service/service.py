@@ -1018,19 +1018,18 @@ def status_action(_userId, _message, _groupId):
                 Context.HARDWARE_PROPERTIES_SERVICE)
             print(type(HardwarePropertiesManager))
             print(type(HardwarePropertiesService))
-            cpu_temp = HardwarePropertiesService.getIntProperty(
-                HardwarePropertiesManager.DEVICE_TEMPERATURE_CPU)
-            bat_temp = HardwarePropertiesService.getIntProperty(
-                HardwarePropertiesManager.DEVICE_TEMPERATURE_BATTERY)
-            gpu_temp = HardwarePropertiesService.getIntProperty(
-                HardwarePropertiesManager.DEVICE_TEMPERATURE_GPU)
-            skn_temp = HardwarePropertiesService.getIntProperty(
-                HardwarePropertiesManager.DEVICE_TEMPERATURE_SKIN)
-            cur_temp = HardwarePropertiesService.getIntProperty(
-                HardwarePropertiesManager.TEMPERATURE_CURRENT)
+
+            cpu_temp = HardwarePropertiesService.getDeviceTemperatures(
+                HardwarePropertiesManager.DEVICE_TEMPERATURE_CPU, HardwarePropertiesManager.TEMPERATURE_CURRENT)
+            bat_temp = HardwarePropertiesService.getDeviceTemperatures(
+                HardwarePropertiesManager.DEVICE_TEMPERATURE_BATTERY, HardwarePropertiesManager.TEMPERATURE_CURRENT)
+            gpu_temp = HardwarePropertiesService.getDeviceTemperatures(
+                HardwarePropertiesManager.DEVICE_TEMPERATURE_GPU, HardwarePropertiesManager.TEMPERATURE_CURRENT)
+            skn_temp = HardwarePropertiesService.getDeviceTemperatures(
+                HardwarePropertiesManager.DEVICE_TEMPERATURE_SKIN, HardwarePropertiesManager.TEMPERATURE_CURRENT)
             cpu_usages = HardwarePropertiesService.getCpuUsages()
             send_message(
-                _groupId, f"cpu temp: {cpu_temp}\nbat temp: {bat_temp}\ngpu temp: {gpu_temp}\nskin temp: {skn_temp}\ncurrent temp: {cur_temp}\ncpu_usages: {cpu_usages}")
+                _groupId, f"cpu temp: {cpu_temp}\nbat temp: {bat_temp}\ngpu temp: {gpu_temp}\nskin temp: {skn_temp}\ncpu_usages: {cpu_usages}")
 
 # endregion
 
