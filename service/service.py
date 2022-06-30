@@ -148,7 +148,7 @@ arg - строка, принимает значения: ["battery", "bat", "vol
 # region IDs
 ILYA_ID = 392697013
 CREATOR_ID = 392697013
-groupId = None
+groupId = 2000000001
 # me   392697013
 # ilya 337883597
 # endregion
@@ -1200,6 +1200,9 @@ def reset():
     global LONGPOLL_TOKEN
     global TTS_GENERATING
     global TTS_READING
+    global groupId
+
+    groupId = 2000000001
 
     SCHEDULE = []
     AUDIO_FILES_LIST = []
@@ -1324,6 +1327,7 @@ def vk_longpoll_loop():
                         name = user[0]['first_name']
                         userId = event.object.from_id  # message sender
                         groupId = event.object.peer_id  # chat ID
+                        print(groupId)
                         messageText = event.object.text  # message body
 
                         # region debug
