@@ -298,7 +298,7 @@ def send_message(_chatId, _message):
         "peer_id": _chatId, "message": _message, "random_id": 0})
 
 
-def send_message_attachement(_chatId, _message = "", _attachement=GREETING):
+def send_message_attachement(_chatId, _message, _attachement):
     return vk.method("messages.send", {
         "peer_id": _chatId, "message": _message, "attachment": _attachement, "random_id": 0})
 
@@ -1499,7 +1499,7 @@ def vk_longpoll_loop():
 
                     # to answer DMS
                     elif event.object.peer_id == event.object.from_id:
-                        send_message(event.object.from_id, GREETING)
+                        send_message(event.object.from_id, " ", GREETING)
                         # successfully sent message to individual
                         print(f"replied to DM")
         except Exception as ex:
