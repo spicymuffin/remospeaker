@@ -1006,7 +1006,7 @@ def status_action(_userId, _message, _groupId):
             isCharging = BatteryService.isCharging()
             Intent = autoclass("android.content.Intent")
             intent = Intent()
-            temp = intent.getIntExtra(BatteryManager.EXTRA_TEMPERATURE, 0)
+            temp = intent.getIntExtra("temperature", 0)
             voltage = intent.getLongExtra(BatteryManager.EXTRA_VOLTAGE, 0)
             send_message(_groupId, f"Charge: {charge}\nIs charging? {isCharging}\nTemp: {temp}\n Voltage: {voltage}")
 
