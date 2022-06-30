@@ -945,7 +945,7 @@ def setvolume_action(_userId, _message, _groupId):
 
 # region status
 
-STATUS_ARGS = ["battery", "bat", "volume", "vol", "tts"]
+STATUS_ARGS = ["battery", "bat", "volume", "vol", "tts", "dev", "device"]
 
 
 def handle_status_request(_message):
@@ -1002,13 +1002,33 @@ def status_action(_userId, _message, _groupId):
             BatteryManager = autoclass('android.os.BatteryManager')
             service = autoclass('org.kivy.android.PythonService').mService
             BatteryService = service.getSystemService(Context.BATTERY_SERVICE)
-            charge = BatteryService.getIntProperty(BatteryManager.BATTERY_PROPERTY_CAPACITY)
+            charge = BatteryService.getIntProperty(
+                BatteryManager.BATTERY_PROPERTY_CAPACITY)
             isCharging = BatteryService.isCharging()
-            Intent = autoclass("android.content.Intent")
-            intent = Intent()
-            temp = intent.getIntExtra("temperature", 0)
-            voltage = intent.getLongExtra(BatteryManager.EXTRA_VOLTAGE, 0)
-            send_message(_groupId, f"Charge: {charge}\nIs charging? {isCharging}\nTemp: {temp}\n Voltage: {voltage}")
+            send_message(
+                _groupId, f"charge: {charge}%\ncharging: {isCharging}")
+
+        if arg == "dev" or arg == "device":
+            from jnius import autoclass
+            Context = autoclass('android.content.Context')
+            HardwarePropertiesManager = autoclass(
+                'android.os.HardwarePropertiesManager')
+            service = autoclass('org.kivy.android.PythonService').mService
+            HardwarePropertiesService = service.getSystemService(
+                Context.HARDWARE_PROPERTIES_SERVICE)
+            cpu_temp = HardwarePropertiesService.getIntProperty(
+                BatteryManager.DEVICE_TEMPERATURE_CPU)
+            bat_temp = HardwarePropertiesService.getIntProperty(
+                BatteryManager.DEVICE_TEMPERATURE_BATTERY)
+            gpu_temp = HardwarePropertiesService.getIntProperty(
+                BatteryManager.DEVICE_TEMPERATURE_GPU)
+            skn_temp = HardwarePropertiesService.getIntProperty(
+                BatteryManager.DEVICE_TEMPERATURE_SKIN)
+            cur_temp = HardwarePropertiesService.getIntProperty(
+                BatteryManager.TEMPERATURE_CURRENT)
+            cpu_usages = HardwarePropertiesService.	getCpuUsages()
+            send_message(
+                _groupId, f"cpu temp: {cpu_temp}\nbat temp: {bat_temp}\ngpu temp: {gpu_temp}\nskin temp: {skn_temp}\ncurrent temp: {cur_temp}\ncpu_usages: {cpu_usages}")
 
 # endregion
 
