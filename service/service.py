@@ -910,8 +910,8 @@ def setvolume_action(_userId, _message, _groupId):
         from jnius import autoclass
         Context = autoclass('android.content.Context')
         AudioManager = autoclass('android.media.AudioManager')
-        PythonActivity = autoclass('org.kivy.android.PythonActivity')
-        volumeControl = PythonActivity.mActivity.getSystemService(Context.AUDIO_SERVICE)
+        service = autoclass('org.kivy.android.PythonService').mService
+        volumeControl = service.getSystemService(Context.AUDIO_SERVICE)
         volumeControl.adjustVolume(AudioManager.ADJUST_RAISE, AudioManager.FLAG_SHOW_UI)
         send_message(_groupId, "up")
 

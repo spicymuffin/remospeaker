@@ -5,13 +5,6 @@ from kivy.clock import Clock
 from kivy.app import App
 from jnius import autoclass
 
-PythonService = autoclass('org.kivy.android.PythonService')
-service = PythonService.mService
-print(type(PythonService))
-print(type(service))
-PythonActivity = autoclass('org.kivy.android.PythonActivity')
-print(type(PythonActivity.mActivity))
-
 class HistoryInput(BoxLayout):
     def collapse_row(self, app, lbl):
         if lbl.shorten:
