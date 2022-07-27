@@ -1228,7 +1228,7 @@ def status_action(_userId, _message, _groupId):
             from jnius import autoclass
             Context = autoclass('android.content.Context')
             BatteryManager = autoclass('android.os.BatteryManager')
-            service = autoclass('org.kivy.android.PythonService').mService
+            service = autoclass('org.kivy.android.PythonActivity').mActivity
             BatteryService = service.getSystemService(Context.BATTERY_SERVICE)
             charge = BatteryService.getIntProperty(
                 BatteryManager.BATTERY_PROPERTY_CAPACITY)
@@ -1240,7 +1240,7 @@ def status_action(_userId, _message, _groupId):
             from jnius import autoclass
             Context = autoclass('android.content.Context')
             AudioManager = autoclass('android.media.AudioManager')
-            service = autoclass('org.kivy.android.PythonService').mService
+            service = autoclass('org.kivy.android.PythonActivity').mActivity
             AudioService = service.getSystemService(Context.AUDIO_SERVICE)
             volume = AudioService.getStreamVolume(AudioManager.STREAM_MUSIC)
             send_message(_groupId, f"volume: {volume}")
